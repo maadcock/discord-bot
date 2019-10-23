@@ -5,7 +5,7 @@ let XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    client.user.setActivity('Screams of Silence', { type: 'LISTENING' });
+    client.user.setActivity('Movies About Dogs', { type: 'WATCHING' });
 });
 
 // Global Settings
@@ -20,8 +20,22 @@ const bungieAuth = auth.bungie;
 client.on('message', msg => {
 
     // Admin Commands
-    if (msg.content.startsWith(prefix)) {
+    if (msg.content.startsWith(prefix)) {        
         if (msg.author.id == UIDAdmin) {
+            if (msg.content.startsWith(prefix + 'np')) {
+                console.log(prefix + 'np run by ' + msg.author.username);
+                if (msg.content.split(" ")[1] == undefined) {
+                    msg.channel.send('ERROR: Please include an activity name. For example: `' + prefix + 'np A Good Movie`');
+                } else {
+                    stringLen = msg.content.split(" ").length;
+                    var newActivity = "";
+                    for (var i = 1; i < msg.content.split(" ").length; i++) {
+                        newActivity = newActivity + msg.content.split(" ")[i] + " ";
+                    }
+                    client.user.setActivity(newActivity, { type: 'PLAYING' });
+                }
+            }
+            
             if (msg.content.startsWith(prefix + 'prefix')) {
                 console.log(prefix + 'prefix run by ' + msg.author.username);
                 if (msg.content.split(" ")[1] == undefined) {
