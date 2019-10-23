@@ -13,6 +13,7 @@ var prefix = '~';
 const clientID = auth.clientID;
 const v5Accept = "application/vnd.twitchtv.v5+json";
 const UIDAdmin = auth.adminUID;
+const twitchUser = auth.twitchUser;
 const bungieAuth = auth.bungie;
 
 // On Message Commands
@@ -36,7 +37,7 @@ client.on('message', msg => {
                 console.log(prefix + 'sublist run by ' + msg.author.username)
 
                 function getChannelID(){ 
-                    let url = "https://api.twitch.tv/kraken/users?login=itsrowdyrooster";
+                    let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
                     return httpGet(url,clientID,v5Accept); 
                 }
                 
@@ -77,7 +78,7 @@ client.on('message', msg => {
                 console.log(prefix + 'subcount run by ' + msg.author.username)
 
                 function getChannelID(){ 
-                    let url = "https://api.twitch.tv/kraken/users?login=itsrowdyrooster";
+                    let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
                     return httpGet(url,clientID,v5Accept); 
                 }
                 
