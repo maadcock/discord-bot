@@ -108,6 +108,47 @@ client.on('message', msg => {
             msg.channel.send('Access denied.');
         }
     }
+
+    // Cat Facts
+    if (msg.content.startsWith(prefix + 'catfacts')) {
+        let msgContent = msg.content.split(" ")[1];
+
+        function httpGet(){
+            let url = 'https://cat-fact.herokuapp.com/facts';
+            let xmlHttp = new XMLHttpRequest();
+            xmlHttp.open( "GET", url, false);
+            xmlHttp.send(null);
+            return xmlHttp.responseText;
+        }
+        let catFacts = JSON.parse(httpGet());
+        let catFactCount = catFacts.all.length;
+
+        if (msgContent == undefined) {
+            console.log(prefix + 'catfacts run by ' + msg.author.username);
+            let factNumber = Math.floor(Math.random() * catFactCount);
+            let catFactObject = catFacts.all[factNumber];
+            let fact = catFactObject.text;
+            let authorFirstName = catFactObject.user.name.first;
+            let authorLastName = catFactObject.user.name.last;
+            msg.channel.send('Cat Fact #' + factNumber + ': "' + fact + '" - ' + authorFirstName + ' ' + authorLastName);
+        } else {
+            console.log(prefix + 'catfacts ' + msgContent + ' run by ' + msg.author.username);
+            msgContent = parseInt(msgContent, 10);
+            if (msgContent > 0) {
+                let factNumber = msgContent;
+                let catFactObject = catFacts.all[factNumber];
+                let fact = catFactObject.text;
+                let authorFirstName = catFactObject.user.name.first;
+                let authorLastName = catFactObject.user.name.last;
+                msg.channel.send('Cat Fact #' + factNumber + ': "' + fact + '" - ' + authorFirstName + ' ' + authorLastName);
+            } else {
+                msg.channel.send('Use a number between 1 and ' + catFactCount + ' For example `' + prefix + 'catfacts 100`');
+            }
+        }
+
+        
+        //
+    }
     
     // Live Status
     if (msg.content.startsWith(prefix + 'live')) {
