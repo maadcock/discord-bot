@@ -5,7 +5,7 @@ let XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    client.user.setActivity('Screams of Silence', { type: 'LISTENING' });
+    client.user.setActivity('maadha.us', { type: 'PLAYING' });
 });
 
 // Global Settings
