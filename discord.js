@@ -1,9 +1,11 @@
-// Discord bot
+// Variables
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const auth = require('./auth.json');
-let XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+const Mixer = require('@mixer/client-node');
+const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
+// Discord Bot Login
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     client.user.setActivity('maadha.us', { type: 'PLAYING' });
@@ -16,6 +18,9 @@ const v5Accept = "application/vnd.twitchtv.v5+json";
 const UIDAdmin = auth.adminUID;
 const twitchUser = auth.twitchUser;
 const bungieAuth = auth.bungie;
+const mixerClientID = auth.mixerClient;
+const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
+
 
 // On Message Commands
 client.on('message', msg => {
@@ -23,6 +28,11 @@ client.on('message', msg => {
     // Admin Commands
     if (msg.content.startsWith(prefix)) {        
         if (msg.author.id == UIDAdmin) {
+            if (msg.content.startsWith(prefix + 'shutdown')) {
+                msg.channel.send('My battery is low and it’s getting dark. Goodbye.');
+                client.destroy();
+            };
+            
             if (msg.content.startsWith(prefix + 'np')) {
                 console.log(prefix + 'np run by ' + msg.author.username);
                 if (msg.content.split(" ")[1] == undefined) {
@@ -35,7 +45,7 @@ client.on('message', msg => {
                     }
                     client.user.setActivity(newActivity, { type: 'PLAYING' });
                 }
-            }
+            };
             
             if (msg.content.startsWith(prefix + 'prefix')) {
                 console.log(prefix + 'prefix run by ' + msg.author.username);
@@ -45,7 +55,7 @@ client.on('message', msg => {
                     prefix = msg.content.split(" ")[1];
                     msg.channel.send('Prefix changed to ' + prefix);
                 }
-            }
+            };
 
             // List Subscribers
             if (msg.content === (prefix + 'sublist')) {
@@ -124,6 +134,29 @@ client.on('message', msg => {
             msg.channel.send('Access denied.');
         }
     }
+    
+    // Mixer Stats
+    if (msg.content.startsWith(prefix + 'mixerstats')) {
+        let msgContent = msg.content.split(" ")[1];
+        const channelName = msgContent;
+
+        mixerClient.use(new Mixer.OAuthProvider(client, {
+            clientId: mixerClientID,
+        }));
+    
+        mixerClient.request('GET', `channels/${channelName}`)
+        .then(res => {
+            const channel = res.body;
+            const chName = channel.user.username;
+            const chViewers = channel.viewersTotal;
+            const chFollowers = channel.numFollowers;
+            res.body.partnered === true ? chStatus = 'Partner' : chStatus = 'Broadcaster';
+            // console.log(res.body);
+
+            msg.channel.send('```css\n' + chName + '\nFollowers: ' + chFollowers + '\nChannel Views: ' + chViewers + '\nBroadcaster Status: ' + chStatus + '```');
+        });
+    }
+    
     // Cat Facts Function
     function catFacts() {
         let msgContent = msg.content.split(" ")[1];
