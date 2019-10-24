@@ -124,8 +124,8 @@ client.on('message', msg => {
             msg.channel.send('Access denied.');
         }
     }
-	// Cat Facts
-    if (msg.content.startsWith(prefix + 'catfacts')) {
+    // Cat Facts Function
+    function catFacts() {
         let msgContent = msg.content.split(" ")[1];
 
         function httpGet(){
@@ -160,6 +160,14 @@ client.on('message', msg => {
                 msg.channel.send('Use a number between 1 and ' + catFactCount + ' For example `' + prefix + 'catfacts 100`');
             }
         }
+    }
+    
+    if (msg.content.startsWith(prefix + 'catfacts')) {
+        catFacts();
+    }    
+
+    if (msg.content.startsWith(prefix + 'catfact')) {
+        catFacts();
     }
     
     // Live Status
