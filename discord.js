@@ -26,115 +26,120 @@ const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
 client.on('message', msg => {
 
     // Admin Commands
-    if (msg.content.startsWith(prefix)) {        
-        if (msg.author.id == UIDAdmin) {
-            if (msg.content.startsWith(prefix + 'shutdown')) {
-                msg.channel.send('My battery is low and it’s getting dark. Goodbye.');
-                client.destroy();
-            };
-            
-            if (msg.content.startsWith(prefix + 'np')) {
-                console.log(prefix + 'np run by ' + msg.author.username);
-                if (msg.content.split(" ")[1] == undefined) {
-                    msg.channel.send('ERROR: Please include an activity name. For example: `' + prefix + 'np A Good Movie`');
-                } else {
-                    stringLen = msg.content.split(" ").length;
-                    var newActivity = "";
-                    for (var i = 1; i < msg.content.split(" ").length; i++) {
-                        newActivity = newActivity + msg.content.split(" ")[i] + " ";
-                    }
-                    client.user.setActivity(newActivity, { type: 'PLAYING' });
-                }
-            };
-            
-            if (msg.content.startsWith(prefix + 'prefix')) {
-                console.log(prefix + 'prefix run by ' + msg.author.username);
-                if (msg.content.split(" ")[1] == undefined) {
-                    msg.channel.send('The current prefix is ' + prefix);
-                } else {
-                    prefix = msg.content.split(" ")[1];
-                    msg.channel.send('Prefix changed to ' + prefix);
-                }
-            };
-
-            // List Subscribers
-            if (msg.content === (prefix + 'sublist')) {
-                console.log(prefix + 'sublist run by ' + msg.author.username)
-
-                function getChannelID(){ 
-                    let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
-                    return httpGet(url,clientID,v5Accept); 
-                }
-                
-                function httpGet(url,clientID,v5Accept){
-                    let xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open( "GET", url, false );
-                    xmlHttp.setRequestHeader("Client-ID",clientID);
-                    xmlHttp.setRequestHeader("Accept",v5Accept)
-                    xmlHttp.setRequestHeader("Authorization",auth.twitch);
-                    xmlHttp.send(null);
-                    return xmlHttp.responseText;
-                }
-                
-                let CID = JSON.parse(getChannelID()).users[0]._id;
-                
-                function getChannelSubs(){ 
-                    let url = "https://api.twitch.tv/kraken/channels/" + CID + "/subscriptions";
-                    return httpGet(url,clientID,v5Accept); 
-                }
-                
-                let subs = JSON.parse(getChannelSubs());        
-                let subCount = subs._total - 1;
-
-                msg.channel.send('You currently have ' + subCount + ' subscribers on Twitch.');
-
-                for (var i = 1; i <= subCount; i++) {
-                    if (subs.subscriptions[i].is_gift == false) {
-                        isGift = 'Paid/Prime';
-                    } else {
-                        isGift = 'Gift';
-                    };
-                    msg.channel.send('**' + subs.subscriptions[i].user.name + '** - Tier ' + (subs.subscriptions[i].sub_plan / 1000) + ' - ' + isGift);
-                }
-            }
-
-            // Subscriber Count
-            if (msg.content === (prefix + 'subcount')) {
-                console.log(prefix + 'subcount run by ' + msg.author.username)
-
-                function getChannelID(){ 
-                    let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
-                    return httpGet(url,clientID,v5Accept); 
-                }
-                
-                function httpGet(url,clientID,v5Accept){
-                    let xmlHttp = new XMLHttpRequest();
-                    xmlHttp.open( "GET", url, false );
-                    xmlHttp.setRequestHeader("Client-ID",clientID);
-                    xmlHttp.setRequestHeader("Accept",v5Accept)
-                    xmlHttp.setRequestHeader("Authorization",auth.twitch);
-                    xmlHttp.send(null);
-                    return xmlHttp.responseText;
-                }
-                
-                let CID = JSON.parse(getChannelID()).users[0]._id;
-                
-                function getChannelSubs(){ 
-                    let url = "https://api.twitch.tv/kraken/channels/" + CID + "/subscriptions";
-                    return httpGet(url,clientID,v5Accept); 
-                }
-                
-                let subs = JSON.parse(getChannelSubs());        
-                let subCount = subs._total - 1;
-
-                msg.channel.send('Rowdy Rooster currently has ' + subCount + ' subscribers on Twitch.');
-            }
-
-        } else {
-            msg.channel.send('Access denied.');
-        }
+    if (msg.content.startsWith(prefix + 'shutdown') && msg.author.id == UIDAdmin) {
+        msg.channel.send('My battery is low and it’s getting dark. Goodbye.');
+        client.destroy();
+    } else if (msg.content.startsWith(prefix + 'shutdown') && msg.author.id != UIDAdmin) {
+        msg.channel.send('Access denied.');
     }
     
+    if (msg.content.startsWith(prefix + 'np') && msg.author.id == UIDAdmin) {
+        console.log(prefix + 'np run by ' + msg.author.username);
+        if (msg.content.split(" ")[1] == undefined) {
+            msg.channel.send('ERROR: Please include an activity name. For example: `' + prefix + 'np A Good Movie`');
+        } else {
+            stringLen = msg.content.split(" ").length;
+            var newActivity = "";
+            for (var i = 1; i < msg.content.split(" ").length; i++) {
+                newActivity = newActivity + msg.content.split(" ")[i] + " ";
+            }
+            client.user.setActivity(newActivity, { type: 'PLAYING' });
+        }
+    } else if (msg.content.startsWith(prefix + 'np') && msg.author.id != UIDAdmin) {
+        msg.channel.send('Access denied.');
+    }
+    
+    if (msg.content.startsWith(prefix + 'prefix') && msg.author.id == UIDAdmin) {
+        console.log(prefix + 'prefix run by ' + msg.author.username);
+        if (msg.content.split(" ")[1] == undefined) {
+            msg.channel.send('The current prefix is ' + prefix);
+        } else {
+            prefix = msg.content.split(" ")[1];
+            msg.channel.send('Prefix changed to ' + prefix);
+        }
+    } else if (msg.content.startsWith(prefix + 'prefix') && msg.author.id != UIDAdmin) {
+        msg.channel.send('Access denied.');
+    }
+
+    // List Subscribers
+    if (msg.content === (prefix + 'sublist') && msg.author.id == UIDAdmin) {
+        console.log(prefix + 'sublist run by ' + msg.author.username)
+
+        function getChannelID(){ 
+            let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
+            return httpGet(url,clientID,v5Accept); 
+        }
+        
+        function httpGet(url,clientID,v5Accept){
+            let xmlHttp = new XMLHttpRequest();
+            xmlHttp.open( "GET", url, false );
+            xmlHttp.setRequestHeader("Client-ID",clientID);
+            xmlHttp.setRequestHeader("Accept",v5Accept)
+            xmlHttp.setRequestHeader("Authorization",auth.twitch);
+            xmlHttp.send(null);
+            return xmlHttp.responseText;
+        }
+        
+        let CID = JSON.parse(getChannelID()).users[0]._id;
+        
+        function getChannelSubs(){ 
+            let url = "https://api.twitch.tv/kraken/channels/" + CID + "/subscriptions";
+            return httpGet(url,clientID,v5Accept); 
+        }
+        
+        let subs = JSON.parse(getChannelSubs());        
+        let subCount = subs._total - 1;
+
+        message = 'You currently have ' + subCount + ' subscribers on Twitch.\n';
+
+        for (var i = 1; i <= subCount; i++) {
+            if (subs.subscriptions[i].is_gift == false) {
+                isGift = 'Paid/Prime';
+            } else {
+                isGift = 'Gift';
+            };
+            message = message + ('**' + subs.subscriptions[i].user.name + '** - Tier ' + (subs.subscriptions[i].sub_plan / 1000) + ' - ' + isGift + '\n');
+            //msg.channel.send('**' + subs.subscriptions[i].user.name + '** - Tier ' + (subs.subscriptions[i].sub_plan / 1000) + ' - ' + isGift);
+        }
+        msg.channel.send(message);
+    } else if (msg.content.startsWith(prefix + 'sublist') && msg.author.id != UIDAdmin) {
+        msg.channel.send('Access denied.');
+    }
+
+    // Subscriber Count
+    if (msg.content === (prefix + 'subcount') && msg.author.id == UIDAdmin) {
+        console.log(prefix + 'subcount run by ' + msg.author.username)
+
+        function getChannelID(){ 
+            let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
+            return httpGet(url,clientID,v5Accept); 
+        }
+        
+        function httpGet(url,clientID,v5Accept){
+            let xmlHttp = new XMLHttpRequest();
+            xmlHttp.open( "GET", url, false );
+            xmlHttp.setRequestHeader("Client-ID",clientID);
+            xmlHttp.setRequestHeader("Accept",v5Accept)
+            xmlHttp.setRequestHeader("Authorization",auth.twitch);
+            xmlHttp.send(null);
+            return xmlHttp.responseText;
+        }
+        
+        let CID = JSON.parse(getChannelID()).users[0]._id;
+        
+        function getChannelSubs(){ 
+            let url = "https://api.twitch.tv/kraken/channels/" + CID + "/subscriptions";
+            return httpGet(url,clientID,v5Accept); 
+        }
+        
+        let subs = JSON.parse(getChannelSubs());        
+        let subCount = subs._total - 1;
+
+        msg.channel.send('Rowdy Rooster currently has ' + subCount + ' subscribers on Twitch.');
+    } else if (msg.content.startsWith(prefix + 'subcount') && msg.author.id != UIDAdmin) {
+        msg.channel.send('Access denied.');
+    }
+
     // Mixer Stats
     if (msg.content.startsWith(prefix + 'mixerstats')) {
         let msgContent = msg.content.split(" ")[1];
