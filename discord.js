@@ -163,11 +163,6 @@ client.on('message', msg => {
     }
     
     // Call Cat Facts
-    if (msg.content.startsWith(prefix + 'catfacts')) {
-        catFacts();
-    }    
-
-    // Call Cat Facts
     if (msg.content.startsWith(prefix + 'catfact')) {
         catFacts();
     }
