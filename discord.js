@@ -20,7 +20,9 @@ const twitchUser = auth.twitchUser;
 const bungieAuth = auth.bungie;
 const mixerClientID = auth.mixerClient;
 const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
-
+const upsToken = auth.upsToken;
+const upsUser = auth.upsUser;
+const upsPass = auth.upsPass;
 
 // On Message Commands
 client.on('message', msg => {
@@ -138,6 +140,30 @@ client.on('message', msg => {
         msg.channel.send('Rowdy Rooster currently has ' + subCount + ' subscribers on Twitch.');
     } else if (msg.content.startsWith(prefix + 'subcount') && msg.author.id != UIDAdmin) {
         msg.channel.send('Access denied.');
+    }
+
+    // User Commands
+
+    // UPS Tracking
+    if (msg.content.startsWith(prefix + 'UPS')) {
+        let msgContent = msg.content.split(" ")[1];
+        msg.channel.send('Check UPS tracking number ' + msgContent);
+
+        function httpGet(){
+            let xmlHttp = new XMLHttpRequest();
+            let url = "https://wwwcie.ups.com/rest/Track";
+            xmlHttp.open("GET", url);
+            //xmlHttp.setRequestHeader("UPSSecurity", '"UsernameToken": { "Username": "' + upsUser + '", "Password": "' + upsPass + '"}, "ServiceAccessToken": { "AccessLicenseNumber": "' + upsToken + '"}');
+            //xmlHttp.setRequestHeader("TrackRequest",'"Request": {"RequestOption": "1", "TransactionReference": {"CustomerContext": "Your Test Case Summary Description" }}, "InquiryNumber": "' + msgContent + '"');
+                
+
+            //xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            //xmlHttp.send(JSON.stringify({ "UPSSecurity": { "UsernameToken": { "Username": '"' + upsUser + '"', "Password": '"' + upsPass + '"'}, "ServiceAccessToken": { "AccessLicenseNumber": '"' + upsToken + '"'}}, "TrackRequest": { "Request": {"RequestOption": "1", "TransactionReference": {"CustomerContext": "Your Test Case Summary Description" }}, "InquiryNumber": '"' + msgContent + '"'}}));
+            return xmlHttp.responseText;
+        }
+
+        console.log(httpGet());
+
     }
 
     // Mixer Stats
