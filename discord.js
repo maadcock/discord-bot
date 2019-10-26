@@ -259,16 +259,34 @@ client.on('message', msg => {
             if (liveStatus.data.length === 0) {
                 msg.channel.send('User is offline.');
             } else if (liveStatus.data[0].type === "live") {
-                msg.channel.send(msgContent + ' is now live!');
+                let username = liveStatus.data[0].user_name;
+                let viewers = liveStatus.data[0].viewer_count;
+                let timeStart = new Date(liveStatus.data[0].started_at);
+                let timeNow = new Date(Date.now());
+                let duration = new Date(timeNow - timeStart).toISOString().substr(11, 8);
+                let time = duration.split(":");
+                let hours = time[0];
+                let minutes = time[1];
+
+                if (hours == 0) {
+                    msgTime = ' They have been live for ' + minutes + ' minutes.';
+                } else {
+                    msgTime = ' They have been live for ' + hours + ' hours and ' + minutes + ' minutes.';
+                }
+                
+                msg.channel.send(username + ' is now live with ' + viewers + ' viewers!' + msgTime);
+                twitchStats(msgContent);
+                console.log(liveStatus);
+                console.log(duration);
             } else {
                msg.channel.send(msgChannel + ' is currently offline.');
             }
         }
     }
 
-    // Twitch Stats
-    if (msg.content.startsWith(prefix + 'stats')) {
-        let msgContent = msg.content.split(" ")[1];
+    // Twitch Stats Function
+
+    function twitchStats(msgContent) {
         console.log(prefix + 'stats ' + msgContent + ' run by ' + msg.author.username);
 
         if (msgContent == undefined) {
@@ -321,10 +339,36 @@ client.on('message', msg => {
                     var broadcastStatus = "Broadcaster";
                 }
 
-                msg.channel.send('```css\n' + channelInfo.name + '\nFollowers: ' + channelInfo.followers + '\nChannel Views: ' + channelInfo.views + '\nBroadcaster Status: ' + broadcastStatus + '\nChannel Team: ' + channelTeam + '```');
+                msg.channel.send('```\n' + channelInfo.name + '\nFollowers: ' + channelInfo.followers + '\nChannel Views: ' + channelInfo.views + '\nBroadcaster Status: ' + broadcastStatus + '\nChannel Team: ' + channelTeam + '\nURL: http://twitch.tv/' + msgContent + '```');
             }
         } 
+    }
+
+    // Twitch Stats
+    if (msg.content.startsWith(prefix + 'stats')) {
+        let msgContent = msg.content.split(" ")[1];
+        twitchStats(msgContent);
     } 
+
+    // Help Direct
+    if (msg.content.startsWith('<@494323715215982592> help') || msg.content.startsWith(prefix + 'help')) {
+        let newMsg = "";
+        if (msg.content.startsWith('<@494323715215982592>')) {
+            newMsg = 'The prefix is currently set to `' + prefix + '`\n\n';
+        }
+        newMsg = newMsg + '**Current Command List**\n';
+        newMsg = newMsg + '`' + prefix + 'catfact` - Returns a random fact about cats\n';
+        newMsg = newMsg + '`' + prefix + 'catfact <number>` - Returns the specificed cat fact\n';
+        newMsg = newMsg + '`' + prefix + 'live <username>` - Returns if Twitch user indicated is currently live\n';
+        newMsg = newMsg + '`' + prefix + 'stats <username>` - Returns Twitch stats of selected user\n';
+        newMsg = newMsg + '`' + prefix + 'mixerstats <username>` - Returns the Mixer stats of the selected user\n';
+        newMsg = newMsg + '`' + prefix + 'help` - Returns a list of bot commands\n';
+        newMsg = newMsg + '\n';
+        newMsg = newMsg + '**Upcoming/Partial Commands**\n';
+        newMsg = newMsg + '`' + prefix + 'UPS <UPS Tracking Number>` - Returns the current status of the indicated tracking number. *Currently incomplete and nonfunctional*';
+        msg.channel.send(newMsg);
+    }
+
 });
 
 client.login(auth.token);
