@@ -1,28 +1,37 @@
 // Variables
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const auth = require('./auth.json');
 const Mixer = require('@mixer/client-node');
 const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+const v5Accept = "application/vnd.twitchtv.v5+json";
+const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
+const MongoClient = require('mongodb').MongoClient;
+
+let prefix = '~';
+
+// Auth
+const auth = require('./auth.json');
+const clientID = auth.clientID;
+const UIDAdmin = auth.adminUID;
+const twitchUser = auth.twitchUser;
+const mixerClientID = auth.mixerClient;
+const mongoUrl = auth.mongoUrl;
+
+// MongoDB Connection
+MongoClient.connect(mongoUrl, function(err, db) {
+    if (err) throw err;
+    var dbo = db.db("mydb");
+    // var myobj = { firstName: "John", lastName: "Smith" };
+    // dbo.collection("users").insertOne(myobj, function(err, res) {
+    //   if (err) throw err;
+    //   console.log("1 user inserted");
+    // });
 
 // Discord Bot Login
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     client.user.setActivity('maadha.us', { type: 'PLAYING' });
 });
-
-// Global Settings
-var prefix = '~';
-const clientID = auth.clientID;
-const v5Accept = "application/vnd.twitchtv.v5+json";
-const UIDAdmin = auth.adminUID;
-const twitchUser = auth.twitchUser;
-const bungieAuth = auth.bungie;
-const mixerClientID = auth.mixerClient;
-const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
-const upsToken = auth.upsToken;
-const upsUser = auth.upsUser;
-const upsPass = auth.upsPass;
 
 // On Message Commands
 client.on('message', msg => {
@@ -53,12 +62,19 @@ client.on('message', msg => {
     
     if (msg.content.startsWith(prefix + 'prefix') && msg.author.id == UIDAdmin) {
         console.log(prefix + 'prefix run by ' + msg.author.username);
+        newPrefix = msg.content.split(" ")[1];
         if (msg.content.split(" ")[1] == undefined) {
             msg.channel.send('The current prefix is ' + prefix);
         } else {
-            prefix = msg.content.split(" ")[1];
+            prefix = newPrefix;
             msg.channel.send('Prefix changed to ' + prefix);
+            var myobj = { server: msg.guild.name, serverId: msg.guild.id, prefix: newPrefix };
+            dbo.collection("servers").insertOne(myobj, function(err, res) {
+              if (err) throw err;
+              console.log("Server prefix object added");
+            });    
         }
+
     } else if (msg.content.startsWith(prefix + 'prefix') && msg.author.id != UIDAdmin) {
         msg.channel.send('Access denied.');
     }
@@ -143,28 +159,6 @@ client.on('message', msg => {
     }
 
     // User Commands
-
-    // UPS Tracking
-    if (msg.content.startsWith(prefix + 'UPS')) {
-        let msgContent = msg.content.split(" ")[1];
-        msg.channel.send('Check UPS tracking number ' + msgContent);
-
-        function httpGet(){
-            let xmlHttp = new XMLHttpRequest();
-            let url = "https://wwwcie.ups.com/rest/Track";
-            xmlHttp.open("GET", url);
-            //xmlHttp.setRequestHeader("UPSSecurity", '"UsernameToken": { "Username": "' + upsUser + '", "Password": "' + upsPass + '"}, "ServiceAccessToken": { "AccessLicenseNumber": "' + upsToken + '"}');
-            //xmlHttp.setRequestHeader("TrackRequest",'"Request": {"RequestOption": "1", "TransactionReference": {"CustomerContext": "Your Test Case Summary Description" }}, "InquiryNumber": "' + msgContent + '"');
-                
-
-            //xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            //xmlHttp.send(JSON.stringify({ "UPSSecurity": { "UsernameToken": { "Username": '"' + upsUser + '"', "Password": '"' + upsPass + '"'}, "ServiceAccessToken": { "AccessLicenseNumber": '"' + upsToken + '"'}}, "TrackRequest": { "Request": {"RequestOption": "1", "TransactionReference": {"CustomerContext": "Your Test Case Summary Description" }}, "InquiryNumber": '"' + msgContent + '"'}}));
-            return xmlHttp.responseText;
-        }
-
-        console.log(httpGet());
-
-    }
 
     // Mixer Stats
     if (msg.content.startsWith(prefix + 'mixerstats')) {
@@ -368,6 +362,30 @@ client.on('message', msg => {
         newMsg = newMsg + '`' + prefix + 'UPS <UPS Tracking Number>` - Returns the current status of the indicated tracking number. *Currently incomplete and nonfunctional*';
         msg.channel.send(newMsg);
     }
+
+    if (msg.content.startsWith(prefix + 'guildID')) {
+        msg.channel.send(msg.guild.id);
+    }
+
+    // Mongo Test
+    if (msg.content.startsWith(prefix + 'dbtest')) {
+        var myobj = { user: msg.author.username, discordId: msg.author.id };
+
+        var query = { discordId: msg.author.id };
+        dbo.collection("users").find(query).toArray(function(err, result) {
+            if (result.length > 0) {
+                msg.channel.send("User is present in the database.");
+            } else {
+                msg.channel.send("User is not present in the database.\nAdding user.")
+                dbo.collection("users").insertOne(myobj, function(err, res) {
+                    if (err) throw err;
+                    console.log("1 user inserted");
+                });
+            }
+        });
+    }
+
+});
 
 });
 
