@@ -344,10 +344,10 @@ client.on('message', msg => {
         twitchStats(msgContent);
     } 
 
-    // Help Direct
+    // Help 
     if (msg.content.startsWith('<@494323715215982592> help') || msg.content.startsWith(prefix + 'help')) {
         let newMsg = "";
-        if (msg.content.startsWith('<@494323715215982592>')) {
+        if (msg.content.startsWith('<@494323715215982592>')) { // Allows the user to ping the bot directly, in which case the bot will return the current prefix for command use
             newMsg = 'The prefix is currently set to `' + prefix + '`\n\n';
         }
         newMsg = newMsg + '**Current Command List**\n';
