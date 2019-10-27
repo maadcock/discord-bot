@@ -100,6 +100,32 @@ client.on('message', msg => {
         });
     }
 
+    // Bulk Delete
+    if (msg.content.startsWith(prefix + 'clean') && msg.member.hasPermission("ADMINISTRATOR")) {
+        console.log(prefix + 'clean run by ' + msg.author.username);
+        msgContent = msg.content.split(" ")[1];
+        if (msgContent == "all") {
+            msg.channel.send("Attempting to delete all messages.");
+            async function clear() {
+                msg.delete();
+                const fetched = await msg.channel.fetchMessages({limit: 99});
+                msg.channel.bulkDelete(fetched);
+            }
+            clear();
+        } else {
+            msgCount = parseFloat(msg.content.split(" ")[1], 10);
+            if (isNaN(msgCount) == true) {
+                msg.channel.send("ERR: Please select a number between 1 and 100.");
+            } else {
+                if ((msgCount > 100) || (msgCount < 1)) {
+                    msg.channel.send("ERR: Please select a number between 1 and 100.");
+                } else {
+                    msg.channel.bulkDelete(msgCount);
+                }
+            }
+        }
+    }
+
     // Set Prefix - Per Server
     if (msg.content.startsWith(prefix + 'prefix') && msg.member.hasPermission("ADMINISTRATOR")) {
         console.log(prefix + 'prefix run by ' + msg.author.username);
