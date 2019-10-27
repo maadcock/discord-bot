@@ -88,7 +88,7 @@ client.on('message', msg => {
         msg.channel.send('Access denied.');
     }
 
-    // 
+    // DB Testing
     if (msg.content.startsWith(prefix + 'db')) {
         dbo.collection("servers").find().toArray((err, items) => {
             let prefixList = "";
@@ -100,6 +100,7 @@ client.on('message', msg => {
         });
     }
 
+    // Set Prefix - Per Server
     if (msg.content.startsWith(prefix + 'prefix') && msg.member.hasPermission("ADMINISTRATOR")) {
         console.log(prefix + 'prefix run by ' + msg.author.username);
         newPrefix = msg.content.split(" ")[1];
@@ -408,6 +409,7 @@ client.on('message', msg => {
         if (msg.content.startsWith('<@494323715215982592>')) { // Allows the user to ping the bot directly, in which case the bot will return the current prefix for command use
             newMsg = 'The prefix is currently set to `' + prefix + '`\n\n';
         }
+        // I should clean this up at some point.
         newMsg = newMsg + '**Current Command List**\n';
         newMsg = newMsg + '`' + prefix + 'catfact` - Returns a random fact about cats\n';
         newMsg = newMsg + '`' + prefix + 'catfact <number>` - Returns the specificed cat fact\n';
