@@ -59,22 +59,61 @@ client.on('message', msg => {
     } else if (msg.content.startsWith(prefix + 'np') && msg.author.id != UIDAdmin) {
         msg.channel.send('Access denied.');
     }
-    
-    if (msg.content.startsWith(prefix + 'prefix') && msg.author.id == UIDAdmin) {
+
+    if (msg.content.startsWith(prefix + 'db')) {
+        dbo.collection("servers").find().toArray((err, items) => {
+            let prefixList = "";
+            for (var i = 0; i < items.length; i++) {
+                prefixList = prefixList + items[i].prefix + " ";
+            }
+            prefixList = "The following prefixes are currently present in the database: `" + prefixList + "`";
+            msg.channel.send(prefixList);
+        });
+    }
+
+        /*
+            var query = { discordId: msg.author.id };
+        dbo.collection("users").find(query).toArray(function(err, result) {
+            if (result.length > 0) {
+                msg.channel.send("User is present in the database.");
+            } else {
+                msg.channel.send("User is not present in the database.\nAdding user.")
+                dbo.collection("users").insertOne(myobj, function(err, res) {
+                    if (err) throw err;
+                    console.log("1 user inserted");
+                });
+            }
+        });
+*/
+
+    if (msg.content.startsWith(prefix + 'prefix') && msg.member.hasPermission("ADMINISTRATOR")) {
         console.log(prefix + 'prefix run by ' + msg.author.username);
         newPrefix = msg.content.split(" ")[1];
-        if (msg.content.split(" ")[1] == undefined) {
-            msg.channel.send('The current prefix is ' + prefix);
-        } else {
-            prefix = newPrefix;
-            msg.channel.send('Prefix changed to ' + prefix);
-            var myobj = { server: msg.guild.name, serverId: msg.guild.id, prefix: newPrefix };
-            dbo.collection("servers").insertOne(myobj, function(err, res) {
-              if (err) throw err;
-              console.log("Server prefix object added");
-            });    
-        }
-
+        var query = { _id : msg.guild.id};
+        dbo.collection("servers").find(query).toArray(function(err, result) {
+            if (result.length > 0) {
+                if (msg.content.split(" ")[1] == undefined) {
+                    msg.channel.send('The current prefix is ' + prefix);
+                } else {
+                    prefix = newPrefix;
+                    msg.channel.send('Prefix changed to ' + prefix);
+                    dbo.collection("servers").update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
+                }
+            } else {
+                if (msg.content.split(" ")[1] == undefined) {
+                    msg.channel.send('The current prefix is ' + prefix);
+                } else {
+                    prefix = newPrefix;
+                    msg.channel.send('Prefix changed to ' + prefix);
+                    var myobj = { _id: msg.guild.id, serverName: msg.guild.name, prefix: newPrefix };
+                    dbo.collection("servers").insertOne(myobj, function(err, res) {
+                      if (err) throw err;
+                      console.log("Server prefix object added");
+                    });    
+                }
+            }
+        });
+        
     } else if (msg.content.startsWith(prefix + 'prefix') && msg.author.id != UIDAdmin) {
         msg.channel.send('Access denied.');
     }
@@ -363,10 +402,6 @@ client.on('message', msg => {
         msg.channel.send(newMsg);
     }
 
-    if (msg.content.startsWith(prefix + 'guildID')) {
-        msg.channel.send(msg.guild.id);
-    }
-
     // Mongo Test
     if (msg.content.startsWith(prefix + 'dbtest')) {
         var myobj = { user: msg.author.username, discordId: msg.author.id };
@@ -383,6 +418,15 @@ client.on('message', msg => {
                 });
             }
         });
+    }
+
+    // Admin Test
+    if (msg.content.startsWith(prefix + 'admin')) {
+        if (msg.member.hasPermission("ADMINISTRATOR")) {
+            msg.channel.send("This user has Administrator permissions.");
+        } else {
+            msg.channel.send("This user is not an administrator.");
+        }
     }
 
 });
