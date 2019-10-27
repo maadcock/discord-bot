@@ -7,8 +7,6 @@ const v5Accept = "application/vnd.twitchtv.v5+json";
 const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner());
 const MongoClient = require('mongodb').MongoClient;
 
-let prefix = '~';
-
 // Auth
 const auth = require('./auth.json');
 const clientID = auth.clientID;
@@ -17,11 +15,13 @@ const twitchUser = auth.twitchUser;
 const mixerClientID = auth.mixerClient;
 const mongoUrl = auth.mongoUrl;
 
+let prefix = '~'; // Set default prefix
+
 // MongoDB Connection
 MongoClient.connect(mongoUrl, function(err, db) {
     if (err) throw err;
     var dbo = db.db("maadhaus-dev");
-// Pull Prefixes
+// Pull Prefixes for servers in db
     function loadPrefixes() {
         dbo.collection("servers").find().toArray(function(err, result) {
             if (result.length > 0) {
