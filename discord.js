@@ -21,7 +21,7 @@ const mongoUrl = auth.mongoUrl;
 MongoClient.connect(mongoUrl, function(err, db) {
     if (err) throw err;
     var dbo = db.db("maadhaus-dev");
-
+// Pull Prefixes
     function loadPrefixes() {
         dbo.collection("servers").find().toArray(function(err, result) {
             if (result.length > 0) {
