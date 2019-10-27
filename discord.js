@@ -20,12 +20,18 @@ const mongoUrl = auth.mongoUrl;
 // MongoDB Connection
 MongoClient.connect(mongoUrl, function(err, db) {
     if (err) throw err;
-    var dbo = db.db("mydb");
-    // var myobj = { firstName: "John", lastName: "Smith" };
-    // dbo.collection("users").insertOne(myobj, function(err, res) {
-    //   if (err) throw err;
-    //   console.log("1 user inserted");
-    // });
+    var dbo = db.db("maadhaus-dev");
+
+    function loadPrefixes() {
+        dbo.collection("servers").find().toArray(function(err, result) {
+            if (result.length > 0) {
+                dbData = result;
+                console.log(dbData);
+            }
+        });
+    };
+
+    loadPrefixes();
 
 // Discord Bot Login
 client.on('ready', () => {
@@ -36,7 +42,28 @@ client.on('ready', () => {
 // On Message Commands
 client.on('message', msg => {
 
+    for (var i = 0; i < dbData.length; i++) {
+        if (dbData[i]._id == msg.guild.id) {
+            prefix = dbData[i].prefix;
+        }
+    }
+
     // Admin Commands
+
+    // Server Count
+    function serverCount() {
+        msg.channel.send('I am currently present in ' + dbData.length + ' servers.');
+    }
+
+    if (msg.content.startsWith('<@494323715215982592> How many servers are using you?') && msg.author.id == UIDAdmin) {
+        serverCount();
+    }
+
+    if (msg.content.startsWith(prefix + 'servercount') && msg.author.id == UIDAdmin) {
+        serverCount();
+    }
+
+    // Shutdown
     if (msg.content.startsWith(prefix + 'shutdown') && msg.author.id == UIDAdmin) {
         msg.channel.send('My battery is low and it’s getting dark. Goodbye.');
         client.destroy();
@@ -44,6 +71,7 @@ client.on('message', msg => {
         msg.channel.send('Access denied.');
     }
     
+    // Now Playing
     if (msg.content.startsWith(prefix + 'np') && msg.author.id == UIDAdmin) {
         console.log(prefix + 'np run by ' + msg.author.username);
         if (msg.content.split(" ")[1] == undefined) {
@@ -60,6 +88,7 @@ client.on('message', msg => {
         msg.channel.send('Access denied.');
     }
 
+    // 
     if (msg.content.startsWith(prefix + 'db')) {
         dbo.collection("servers").find().toArray((err, items) => {
             let prefixList = "";
@@ -71,49 +100,39 @@ client.on('message', msg => {
         });
     }
 
-        /*
-            var query = { discordId: msg.author.id };
-        dbo.collection("users").find(query).toArray(function(err, result) {
-            if (result.length > 0) {
-                msg.channel.send("User is present in the database.");
-            } else {
-                msg.channel.send("User is not present in the database.\nAdding user.")
-                dbo.collection("users").insertOne(myobj, function(err, res) {
-                    if (err) throw err;
-                    console.log("1 user inserted");
-                });
-            }
-        });
-*/
-
     if (msg.content.startsWith(prefix + 'prefix') && msg.member.hasPermission("ADMINISTRATOR")) {
         console.log(prefix + 'prefix run by ' + msg.author.username);
         newPrefix = msg.content.split(" ")[1];
-        var query = { _id : msg.guild.id};
-        dbo.collection("servers").find(query).toArray(function(err, result) {
-            if (result.length > 0) {
-                if (msg.content.split(" ")[1] == undefined) {
-                    msg.channel.send('The current prefix is ' + prefix);
+        if (newPrefix == "`") {
+            msg.channel.send("Invalid prefix selection. Please use another prefix.");
+        } else {
+            var query = { _id : msg.guild.id};
+            dbo.collection("servers").find(query).toArray(function(err, result) {
+                if (result.length > 0) {
+                    if (msg.content.split(" ")[1] == undefined) {
+                        msg.channel.send('The current prefix is ' + prefix);
+                    } else {
+                        prefix = newPrefix;
+                        msg.channel.send('Prefix changed to ' + prefix);
+                        dbo.collection("servers").update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
+                        loadPrefixes();
+                    }
                 } else {
-                    prefix = newPrefix;
-                    msg.channel.send('Prefix changed to ' + prefix);
-                    dbo.collection("servers").update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
+                    if (msg.content.split(" ")[1] == undefined) {
+                        msg.channel.send('The current prefix is ' + prefix);
+                    } else {
+                        prefix = newPrefix;
+                        msg.channel.send('Prefix changed to ' + prefix);
+                        var myobj = { _id: msg.guild.id, serverName: msg.guild.name, prefix: newPrefix };
+                        dbo.collection("servers").insertOne(myobj, function(err, res) {
+                        if (err) throw err;
+                        console.log("Server prefix object added");
+                        }); 
+                        loadPrefixes();   
+                    }
                 }
-            } else {
-                if (msg.content.split(" ")[1] == undefined) {
-                    msg.channel.send('The current prefix is ' + prefix);
-                } else {
-                    prefix = newPrefix;
-                    msg.channel.send('Prefix changed to ' + prefix);
-                    var myobj = { _id: msg.guild.id, serverName: msg.guild.name, prefix: newPrefix };
-                    dbo.collection("servers").insertOne(myobj, function(err, res) {
-                      if (err) throw err;
-                      console.log("Server prefix object added");
-                    });    
-                }
-            }
-        });
-        
+            });
+        }
     } else if (msg.content.startsWith(prefix + 'prefix') && msg.author.id != UIDAdmin) {
         msg.channel.send('Access denied.');
     }
