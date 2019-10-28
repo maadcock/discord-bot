@@ -25,8 +25,7 @@ MongoClient.connect(mongoUrl, function(err, db) {
     function loadPrefixes() {
         dbo.collection("servers").find().toArray(function(err, result) {
             if (result.length > 0) {
-                dbData = result;
-                console.log(dbData);
+                dbServers = result;
             }
         });
     };
@@ -42,9 +41,9 @@ client.on('ready', () => {
 // On Message Commands
 client.on('message', msg => {
 
-    for (var i = 0; i < dbData.length; i++) {
-        if (dbData[i]._id == msg.guild.id) {
-            prefix = dbData[i].prefix;
+    for (var i = 0; i < dbServers.length; i++) {
+        if (dbServers[i]._id == msg.guild.id) {
+            prefix = dbServers[i].prefix;
         }
     }
 
@@ -52,7 +51,7 @@ client.on('message', msg => {
 
     // Server Count
     function serverCount() {
-        msg.channel.send('I am currently present in ' + dbData.length + ' servers.');
+        msg.channel.send('I am currently present in ' + dbServers.length + ' servers.');
     }
 
     if (msg.content.startsWith('<@494323715215982592> How many servers are using you?') && msg.author.id == UIDAdmin) {
@@ -152,8 +151,8 @@ client.on('message', msg => {
                         msg.channel.send('Prefix changed to ' + prefix);
                         var myobj = { _id: msg.guild.id, serverName: msg.guild.name, prefix: newPrefix };
                         dbo.collection("servers").insertOne(myobj, function(err, res) {
-                        if (err) throw err;
-                        console.log("Server prefix object added");
+                            if (err) throw err;
+                            console.log("Server prefix object added");
                         }); 
                         loadPrefixes();   
                     }
@@ -364,7 +363,6 @@ client.on('message', msg => {
     }
 
     // Twitch Stats Function
-
     function twitchStats(msgContent) {
         console.log(prefix + 'stats ' + msgContent + ' run by ' + msg.author.username);
 
@@ -449,25 +447,53 @@ client.on('message', msg => {
         msg.channel.send(newMsg);
     }
 
-    // Mongo Test
-    if (msg.content.startsWith(prefix + 'dbtest')) {
-        var myobj = { user: msg.author.username, discordId: msg.author.id };
+    // Create Profile
+    if (msg.content.startsWith(prefix + 'createprofile')) {
+        let newUser = { _id: msg.author.id, displayName: msg.author.username, twitch: "", twitter: "" };
 
-        var query = { discordId: msg.author.id };
+        let query = { _id: msg.author.id };
         dbo.collection("users").find(query).toArray(function(err, result) {
             if (result.length > 0) {
-                msg.channel.send("User is present in the database.");
+                msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
             } else {
                 msg.channel.send("User is not present in the database.\nAdding user.")
-                dbo.collection("users").insertOne(myobj, function(err, res) {
+                dbo.collection("users").insertOne(newUser, function(err, res) {
                     if (err) throw err;
-                    console.log("1 user inserted");
+                    console.log("1 User Added");
                 });
             }
         });
+
+        
     }
 
-    // Admin Test
+    // Who Am I?
+    if ((msg.content.startsWith(prefix + 'whoami') || msg.content.startsWith(prefix + 'profile'))) {
+        let msgContent = msg.content.split(" ")[1];
+        if (msgContent == "add") {
+            msgContent = msg.content.split(" ")[2];
+            if (msgContent == "twitch") {
+                msg.channel.send("This is where we will add a new twitch URL.");
+            } else {
+                msg.channel.send("This is where we will add a new thing.");
+            }
+        } else {
+            let query = { _id: msg.author.id };
+            dbo.collection("users").find(query).toArray(function(err, result) {
+                if (result.length > 0) {
+                    newMsg = "```";
+                    newMsg = newMsg + "User ID: " + result[0]._id + "\n";
+                    newMsg = newMsg + "```";
+                    msg.channel.send(newMsg);
+                    //msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
+                } else {
+                    msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                }
+            });
+        }
+    }
+
+    // Admin Check
     if (msg.content.startsWith(prefix + 'admin')) {
         if (msg.member.hasPermission("ADMINISTRATOR")) {
             msg.channel.send("This user has Administrator permissions.");
