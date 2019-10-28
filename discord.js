@@ -17,20 +17,44 @@ const mongoUrl = auth.mongoUrl;
 
 let prefix = '~'; // Set default prefix
 
+// Sleep Function
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
+  }
+
 // MongoDB Connection
 MongoClient.connect(mongoUrl, function(err, db) {
     if (err) throw err;
-    var dbo = db.db("maadhaus-dev");
+    const dbo = db.db("maadhaus-dev");
+    const colUsers = dbo.collection("users");
+    const colServers = dbo.collection("servers");
+
+
 // Pull Prefixes for servers in db
     function loadPrefixes() {
-        dbo.collection("servers").find().toArray(function(err, result) {
+        colServers.find().toArray(function(err, result) {
             if (result.length > 0) {
                 dbServers = result;
             }
         });
     };
 
+    // Load Users from Db
+    function loadUsers() {
+        colUsers.find().toArray(function(err, result) {
+            if (result.length > 0) {
+                dbUsers = result;
+            }
+        });
+    };
+
     loadPrefixes();
+    loadUsers();
 
 // Discord Bot Login
 client.on('ready', () => {
@@ -89,7 +113,7 @@ client.on('message', msg => {
 
     // DB Testing
     if (msg.content.startsWith(prefix + 'db')) {
-        dbo.collection("servers").find().toArray((err, items) => {
+        colServers.find().toArray((err, items) => {
             let prefixList = "";
             for (var i = 0; i < items.length; i++) {
                 prefixList = prefixList + items[i].prefix + " ";
@@ -133,14 +157,14 @@ client.on('message', msg => {
             msg.channel.send("Invalid prefix selection. Please use another prefix.");
         } else {
             var query = { _id : msg.guild.id};
-            dbo.collection("servers").find(query).toArray(function(err, result) {
+            colServers.find(query).toArray(function(err, result) {
                 if (result.length > 0) {
                     if (msg.content.split(" ")[1] == undefined) {
                         msg.channel.send('The current prefix is ' + prefix);
                     } else {
                         prefix = newPrefix;
                         msg.channel.send('Prefix changed to ' + prefix);
-                        dbo.collection("servers").update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
+                        colServers.update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
                         loadPrefixes();
                     }
                 } else {
@@ -150,7 +174,7 @@ client.on('message', msg => {
                         prefix = newPrefix;
                         msg.channel.send('Prefix changed to ' + prefix);
                         var myobj = { _id: msg.guild.id, serverName: msg.guild.name, prefix: newPrefix };
-                        dbo.collection("servers").insertOne(myobj, function(err, res) {
+                        colServers.insertOne(myobj, function(err, res) {
                             if (err) throw err;
                             console.log("Server prefix object added");
                         }); 
@@ -449,15 +473,16 @@ client.on('message', msg => {
 
     // Create Profile
     if (msg.content.startsWith(prefix + 'createprofile')) {
+        loadUsers();
         let newUser = { _id: msg.author.id, displayName: msg.author.username, twitch: "", twitter: "" };
 
         let query = { _id: msg.author.id };
-        dbo.collection("users").find(query).toArray(function(err, result) {
+        colUsers.find(query).toArray(function(err, result) {
             if (result.length > 0) {
                 msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
             } else {
                 msg.channel.send("User is not present in the database.\nAdding user.")
-                dbo.collection("users").insertOne(newUser, function(err, res) {
+                colUsers.insertOne(newUser, function(err, res) {
                     if (err) throw err;
                     console.log("1 User Added");
                 });
@@ -467,29 +492,61 @@ client.on('message', msg => {
         
     }
 
+    // Who Am I Function
+    function whoAmI() {
+        loadUsers();
+        let query = { _id: msg.author.id };
+        colUsers.find(query).toArray(function(err, result) {
+            if (result.length > 0) {
+                newMsg = "```";
+                newMsg = newMsg + "Display Name: " + result[0].displayName + "\n";
+                newMsg = newMsg + "User ID: " + result[0]._id + "\n";
+                newMsg = newMsg + "Twitch: " + result[0].twitch + "\n";
+                newMsg = newMsg + "```";
+                msg.channel.send(newMsg);
+                //msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
+            } else {
+                msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+            }
+        });
+    }
+
     // Who Am I?
-    if ((msg.content.startsWith(prefix + 'whoami') || msg.content.startsWith(prefix + 'profile'))) {
+    if (msg.content.startsWith(prefix + 'whoami')) {
+        whoAmI();
+    }
+
+    // Profile
+    if (msg.content.startsWith(prefix + 'profile')) {
+        loadUsers();
         let msgContent = msg.content.split(" ")[1];
         if (msgContent == "add") {
             msgContent = msg.content.split(" ")[2];
             if (msgContent == "twitch") {
-                msg.channel.send("This is where we will add a new twitch URL.");
+                msgContent = msg.content.split(" ")[3];
+                if (msgContent == null) {
+                    msg.channel.send("Please specify a Twitch link. For example `" + prefix + "profile add twitch http://www.twitch.tv/itsrowdyrooster`");
+                } else {
+                    let query = { _id: msg.author.id };
+                    colUsers.find(query).toArray(function(err, result) {
+                    if (result.length > 0) {
+                        _id = result[0]._id;
+                        displayName = result[0].displayName;
+                        twitch = msgContent;
+                        twitter = result[0].twitter;
+                        colUsers.update({_id : msg.author.id}, { _id: _id, displayName: displayName, twitch: twitch, twitter: twitter });
+                        sleep(500);
+                        whoAmI();
+                    } else {
+                        msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                    }
+                    });
+                }
             } else {
                 msg.channel.send("This is where we will add a new thing.");
             }
         } else {
-            let query = { _id: msg.author.id };
-            dbo.collection("users").find(query).toArray(function(err, result) {
-                if (result.length > 0) {
-                    newMsg = "```";
-                    newMsg = newMsg + "User ID: " + result[0]._id + "\n";
-                    newMsg = newMsg + "```";
-                    msg.channel.send(newMsg);
-                    //msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
-                } else {
-                    msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
-                }
-            });
+            whoAmI();
         }
     }
 
@@ -500,6 +557,11 @@ client.on('message', msg => {
         } else {
             msg.channel.send("This user is not an administrator.");
         }
+    }
+
+    // Ping
+    if (msg.content.startsWith(prefix + 'ping') || msg.content.startsWith('<@494323715215982592> ping')) {
+        msg.channel.send("Pong!");
     }
 
 });
