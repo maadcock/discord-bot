@@ -27,6 +27,12 @@ function sleep(milliseconds) {
     }
   }
 
+// Discord Bot Login
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    client.user.setActivity('maadha.us', { type: 'PLAYING' });
+});
+
 // MongoDB Connection
 MongoClient.connect(mongoUrl, function(err, db) {
     if (err) throw err;
@@ -55,12 +61,6 @@ MongoClient.connect(mongoUrl, function(err, db) {
 
     loadPrefixes();
     loadUsers();
-
-// Discord Bot Login
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-    client.user.setActivity('maadha.us', { type: 'PLAYING' });
-});
 
 // On Message Commands
 client.on('message', msg => {
@@ -494,11 +494,8 @@ client.on('message', msg => {
         
     }
 
-    // Who Am I Function
-    function whoAmI() {
-        loadUsers();
-        let query = { _id: msg.author.id };
-        colUsers.find(query).toArray(function(err, result) {
+    function whoIs(user) {
+        colUsers.find(user).toArray(function(err, result) {
             if (result.length > 0) {
                 newMsg = "```";
                 newMsg = newMsg + "Display Name: " + result[0].displayName + "\n";
@@ -513,11 +510,19 @@ client.on('message', msg => {
                 msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
             }
         });
+
     }
 
+    // Who Is
+    if (msg.content.startsWith(prefix + 'whois')) {
+        let user = msg.content.split(" ")[1].substring(3,21);
+        whoIs(user);
+    }
+    
     // Who Am I?
     if (msg.content.startsWith(prefix + 'whoami')) {
-        whoAmI();
+        let user = { _id: msg.author.id };
+        whoIs(user);
     }
 
     // Add User Attribute
@@ -532,6 +537,16 @@ client.on('message', msg => {
         colUsers.update({ "_id" : usrId }, { "$unset" : {[usrHeader] : usrValue}});
         sleep(1000);
         msg.channel.send("Profile updated.");
+    }
+
+    // Delete Profile
+    if (msg.content.startsWith(prefix + "deleteprofile")) {
+        loadUsers();
+        let delUser = { _id: msg.author.id };
+        colUsers.remove(delUser, function(err, res) {
+            if (err) throw err;
+            console.log("1 User Added");
+        });
     }
 
     // Profile
@@ -613,7 +628,8 @@ client.on('message', msg => {
                 msg.channel.send("Please enter the name of the entry you would like to delete. For example `" + prefix + "profile del twitch`");
             }
         } else{
-            whoAmI();
+            user = msg.author.id;
+            whoIs(user);
         }
     }
 
