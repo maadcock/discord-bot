@@ -164,7 +164,8 @@ client.on('message', msg => {
                     } else {
                         prefix = newPrefix;
                         msg.channel.send('Prefix changed to ' + prefix);
-                        colServers.update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });    
+                        colServers.update({_id : msg.guild.id}, { _id : msg.guild.id, serverName: msg.guild.name, prefix: newPrefix });
+                        sleep(500);    
                         loadPrefixes();
                     }
                 } else {
@@ -178,7 +179,8 @@ client.on('message', msg => {
                             if (err) throw err;
                             console.log("Server prefix object added");
                         }); 
-                        loadPrefixes();   
+                        sleep(500);   
+                        loadPrefixes();
                     }
                 }
             });
@@ -501,7 +503,15 @@ client.on('message', msg => {
                 newMsg = "```";
                 newMsg = newMsg + "Display Name: " + result[0].displayName + "\n";
                 newMsg = newMsg + "User ID: " + result[0]._id + "\n";
-                newMsg = newMsg + "Twitch: " + result[0].twitch + "\n";
+                if (result[0].twitch != undefined) {
+                    newMsg = newMsg + "Twitch: " + result[0].twitch + "\n";
+                }
+                if (result[0].twitter != undefined) {
+                    newMsg = newMsg + "Twitter: " + result[0].twitter + "\n";
+                }
+                if (result[0].facebook != undefined) {
+                    newMsg = newMsg + "Facebook: " + result[0].facebook + "\n";
+                }
                 newMsg = newMsg + "```";
                 msg.channel.send(newMsg);
                 //msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
@@ -516,6 +526,13 @@ client.on('message', msg => {
         whoAmI();
     }
 
+    // Update User Profile
+    function updateUser(usrId, usrHeader, usrValue) {
+        colUsers.update({ "_id" : usrId }, { "$set" : {[usrHeader] : usrValue}});
+        sleep(500);
+        whoAmI();
+    }
+
     // Profile
     if (msg.content.startsWith(prefix + 'profile')) {
         loadUsers();
@@ -527,16 +544,47 @@ client.on('message', msg => {
                 if (msgContent == null) {
                     msg.channel.send("Please specify a Twitch link. For example `" + prefix + "profile add twitch http://www.twitch.tv/itsrowdyrooster`");
                 } else {
-                    let query = { _id: msg.author.id };
+                    let query = { "_id" : msg.author.id };
                     colUsers.find(query).toArray(function(err, result) {
                     if (result.length > 0) {
-                        _id = result[0]._id;
-                        displayName = result[0].displayName;
-                        twitch = msgContent;
-                        twitter = result[0].twitter;
-                        colUsers.update({_id : msg.author.id}, { _id: _id, displayName: displayName, twitch: twitch, twitter: twitter });
-                        sleep(500);
-                        whoAmI();
+                        usrId = msg.author.id;
+                        usrHeader = "twitch";
+                        usrValue = msgContent;
+                        updateUser(usrId, usrHeader, usrValue);
+                    } else {
+                        msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                    }
+                    });
+                }
+            } else if (msgContent == "twitter") {
+                msgContent = msg.content.split(" ")[3];
+                if (msgContent == null) {
+                    msg.channel.send("Please specify a Twitter link. For example `" + prefix + "profile add twitch http://www.twitter.com/itsrowdyrooster`");
+                } else {
+                    let query = { "_id" : msg.author.id };
+                    colUsers.find(query).toArray(function(err, result) {
+                    if (result.length > 0) {
+                        usrId = msg.author.id;
+                        usrHeader = "twitter";
+                        usrValue = msgContent;
+                        updateUser(usrId, usrHeader, usrValue);
+                    } else {
+                        msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                    }
+                    });
+                }
+            } else if (msgContent == "facebook") {
+                msgContent = msg.content.split(" ")[3];
+                if (msgContent == null) {
+                    msg.channel.send("Please specify a Facebook link. For example `" + prefix + "profile add twitch http://www.facebook.com/itsrowdyrooster`");
+                } else {
+                    let query = { "_id" : msg.author.id };
+                    colUsers.find(query).toArray(function(err, result) {
+                    if (result.length > 0) {
+                        usrId = msg.author.id;
+                        usrHeader = "facebook";
+                        usrValue = msgContent;
+                        updateUser(usrId, usrHeader, usrValue);
                     } else {
                         msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
                     }
