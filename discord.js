@@ -476,7 +476,7 @@ client.on('message', msg => {
     // Create Profile
     if (msg.content.startsWith(prefix + 'createprofile')) {
         loadUsers();
-        let newUser = { _id: msg.author.id, displayName: msg.author.username, twitch: "", twitter: "" };
+        let newUser = { _id: msg.author.id, displayName: msg.author.username };
 
         let query = { _id: msg.author.id };
         colUsers.find(query).toArray(function(err, result) {
@@ -503,15 +503,9 @@ client.on('message', msg => {
                 newMsg = "```";
                 newMsg = newMsg + "Display Name: " + result[0].displayName + "\n";
                 newMsg = newMsg + "User ID: " + result[0]._id + "\n";
-                if (result[0].twitch != undefined) {
-                    newMsg = newMsg + "Twitch: " + result[0].twitch + "\n";
-                }
-                if (result[0].twitter != undefined) {
-                    newMsg = newMsg + "Twitter: " + result[0].twitter + "\n";
-                }
-                if (result[0].facebook != undefined) {
-                    newMsg = newMsg + "Facebook: " + result[0].facebook + "\n";
-                }
+                newMsg = result[0].twitch != undefined ? newMsg = newMsg + "Twitch: " + result[0].twitch + "\n" : newMsg;
+                newMsg = result[0].twitter != undefined ? newMsg = newMsg + "Twitter: " + result[0].twitter + "\n" : newMsg;
+                newMsg = result[0].facebook != undefined ? newMsg = newMsg + "Facebook: " + result[0].facebook + "\n" : newMsg;
                 newMsg = newMsg + "```";
                 msg.channel.send(newMsg);
                 //msg.channel.send("Profile '" + result[0].displayName + "' already exists with ID " + result[0]._id);
@@ -526,11 +520,18 @@ client.on('message', msg => {
         whoAmI();
     }
 
-    // Update User Profile
-    function updateUser(usrId, usrHeader, usrValue) {
+    // Add User Attribute
+    function updateUser(usrId, usrHeader, usrValue, msg) {
         colUsers.update({ "_id" : usrId }, { "$set" : {[usrHeader] : usrValue}});
-        sleep(500);
-        whoAmI();
+        sleep(1000);
+        msg.channel.send("Profile updated.");
+    }
+
+    // Del User Attribute
+    function delUserAtt(usrId, usrHeader, usrValue, msg) {
+        colUsers.update({ "_id" : usrId }, { "$unset" : {[usrHeader] : usrValue}});
+        sleep(1000);
+        msg.channel.send("Profile updated.");
     }
 
     // Profile
@@ -550,7 +551,7 @@ client.on('message', msg => {
                         usrId = msg.author.id;
                         usrHeader = "twitch";
                         usrValue = msgContent;
-                        updateUser(usrId, usrHeader, usrValue);
+                        updateUser(usrId, usrHeader, usrValue, msg);
                     } else {
                         msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
                     }
@@ -567,7 +568,7 @@ client.on('message', msg => {
                         usrId = msg.author.id;
                         usrHeader = "twitter";
                         usrValue = msgContent;
-                        updateUser(usrId, usrHeader, usrValue);
+                        updateUser(usrId, usrHeader, usrValue, msg);
                     } else {
                         msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
                     }
@@ -584,7 +585,7 @@ client.on('message', msg => {
                         usrId = msg.author.id;
                         usrHeader = "facebook";
                         usrValue = msgContent;
-                        updateUser(usrId, usrHeader, usrValue);
+                        updateUser(usrId, usrHeader, usrValue, msg);
                     } else {
                         msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
                     }
@@ -593,7 +594,25 @@ client.on('message', msg => {
             } else {
                 msg.channel.send("This is where we will add a new thing.");
             }
-        } else {
+        } else if (msgContent == "del") {
+            msgContent = msg.content.split(" ")[2];
+            if (msgContent == "twitch" || msgContent == "twitter" || msgContent == "facebook") {
+                let query = { "_id" : msg.author.id };
+                colUsers.find(query).toArray(function(err, result) {
+                    if (result.length > 0) {
+                        method = "del";
+                        usrId = msg.author.id;
+                        usrHeader = msgContent;
+                        usrValue = result[0].twitch;
+                        delUserAtt(usrId, usrHeader, usrValue, msg);
+                    } else {
+                        msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                    }
+                });
+            } else {
+                msg.channel.send("Please enter the name of the entry you would like to delete. For example `" + prefix + "profile del twitch`");
+            }
+        } else{
             whoAmI();
         }
     }
