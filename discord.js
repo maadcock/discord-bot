@@ -581,6 +581,9 @@ client.on('message', msg => {
             newMsg = newMsg + '\n';
             newMsg = newMsg + '**Admin Commands**\n';
             newMsg = newMsg + '`' + prefix + 'prefix` - Changes the prefix for the bot in the server\n';
+            newMsg = newMsg + '`' + prefix + 'timeout` - Sends a user to designated timeout role\n';
+            newMsg = newMsg + '`' + prefix + 'timeout setrole <role>` - Designates a timeout role\n';
+            newMsg = newMsg + '`' + prefix + 'timeoutlist` - Lists currently timed out users\n';
             msg.channel.send(newMsg);
         }
 
