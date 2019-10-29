@@ -204,6 +204,7 @@ client.on('message', msg => {
                 } else {
                     colServers.find(query).toArray(function(err, result) {
                         if (result.length > 0) {
+                            timeoutRole = result[0].timeoutRole;
                             timeoutRole = result[0].timeoutRole.substring(3,21);
                             if (timeoutRole == undefined) {
                                 msg.channel.send("Timeout role not set! Please set the timeout role by using the command `" + prefix + "timeout setrole <role>`");
