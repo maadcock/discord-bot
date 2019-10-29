@@ -469,21 +469,21 @@ client.on('message', msg => {
         newMsg = newMsg + '`' + prefix + 'whois <user>` - Returns the users profile\n';
         newMsg = newMsg + '`' + prefix + 'profile add <twitch|twitter|facebook>` - Adds Twitch|Twitter|Facebook links to your profile\n';
         newMsg = newMsg + '`' + prefix + 'profile del <twitch|twitter|facebook>` - Removes Twitch|Twitter|Facebook links to your profile\n';
-        newMsg = newmsg + '\n';
+        newMsg = newMsg + '\n';
         newMsg = newMsg + '**Random Command List**\n';
         newMsg = newMsg + '`' + prefix + 'catfact` - Returns a random fact about cats\n';
         newMsg = newMsg + '`' + prefix + 'catfact <number>` - Returns the specificed cat fact\n';
-        newMsg = newmsg + '\n';
+        newMsg = newMsg + '\n';
         newMsg = newMsg + '**Twitch/Mixer Command List**\n';
         newMsg = newMsg + '`' + prefix + 'live <username>` - Returns if Twitch user indicated is currently live\n';
         newMsg = newMsg + '`' + prefix + 'stats <username>` - Returns Twitch stats of selected user\n';
         newMsg = newMsg + '`' + prefix + 'mixerstats <username>` - Returns the Mixer stats of the selected user\n';
         newMsg = newMsg + '\n';
-        newMsg = newMsg + '**Bot Commands**'
+        newMsg = newMsg + '**Bot Commands**\n'
         newMsg = newMsg + '`' + prefix + 'help` - Returns a list of bot commands\n';
         newMsg = newMsg + '\n';
         newMsg = newMsg + '**Admin Commands**\n';
-        newMsg = newMsg + '`' + prefix + 'prefix` - Changes the prefix for the bot in the server\n';        newMsg = newMsg = '`' + prefix + '';
+        newMsg = newMsg + '`' + prefix + 'prefix` - Changes the prefix for the bot in the server\n';
         msg.channel.send(newMsg);
     }
 
