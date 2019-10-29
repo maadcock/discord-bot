@@ -11,6 +11,7 @@ const MongoClient = require('mongodb').MongoClient;
 const auth = require('./auth.json');
 const clientID = auth.clientID;
 const UIDAdmin = auth.adminUID;
+const botUID = auth.botUID;
 const twitchUser = auth.twitchUser;
 const mixerClientID = auth.mixerClient;
 const mongoUrl = auth.mongoUrl;
@@ -454,9 +455,9 @@ client.on('message', msg => {
     } 
 
     // Help 
-    if (msg.content.startsWith('<@494323715215982592> help') || msg.content.startsWith(prefix + 'help')) {
+    if (msg.content.startsWith('<@' + botUID + '> help') || msg.content.startsWith(prefix + 'help')) {
         let newMsg = "";
-        if (msg.content.startsWith('<@494323715215982592>')) { // Allows the user to ping the bot directly, in which case the bot will return the current prefix for command use
+        if (msg.content.startsWith('<@' + botUID + '>')) { // Allows the user to ping the bot directly, in which case the bot will return the current prefix for command use
             newMsg = 'The prefix is currently set to `' + prefix + '`\n\n';
         }
         // I should clean this up at some point.
@@ -643,7 +644,7 @@ client.on('message', msg => {
     }
 
     // Ping
-    if (msg.content.startsWith(prefix + 'ping') || msg.content.startsWith('<@494323715215982592> ping')) {
+    if (msg.content.startsWith(prefix + 'ping') || msg.content.startsWith('<@' + botUID + '> ping')) {
         msg.channel.send("Pong!");
     }
 
