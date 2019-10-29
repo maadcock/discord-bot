@@ -565,8 +565,8 @@ client.on('message', msg => {
             newMsg = newMsg + '`' + prefix + 'profile` - Returns your profile\n';
             newMsg = newMsg + '`' + prefix + 'whoami` - Returns your profile\n';
             newMsg = newMsg + '`' + prefix + 'whois <user>` - Returns the users profile\n';
-            newMsg = newMsg + '`' + prefix + 'profile add <twitch|twitter|facebook>` - Adds Twitch|Twitter|Facebook links to your profile\n';
-            newMsg = newMsg + '`' + prefix + 'profile del <twitch|twitter|facebook>` - Removes Twitch|Twitter|Facebook links to your profile\n';
+            newMsg = newMsg + '`' + prefix + 'profile add <twitch|twitter|facebook|instagram>` - Adds Twitch|Twitter|Facebook|Instagram links to your profile\n';
+            newMsg = newMsg + '`' + prefix + 'profile del <twitch|twitter|facebook|instagram>` - Removes Twitch|Twitter|Facebook|Instagram links to your profile\n';
             newMsg = newMsg + '\n';
             newMsg = newMsg + '**Random Command List**\n';
             newMsg = newMsg + '`' + prefix + 'catfact` - Returns a random fact about cats\n';
@@ -664,69 +664,41 @@ client.on('message', msg => {
             });
         }
 
+        // Add Link Function
+        function addLink(msg, platform) {
+            msgContent = msg.content.split(" ")[3];
+            if (msgContent == null) {
+                msg.channel.send("Please specify a " + platform.charAt(0).toUpperCase() + platform.substr(1).toLowerCase() + " link. For example `" + prefix + "profile add " + platform + " http://www." + platform + ".com/itsrowdyrooster`");
+            } else {
+                let query = { "_id" : msg.author.id };
+                colUsers.find(query).toArray(function(err, result) {
+                if (result.length > 0) {
+                    usrId = msg.author.id;
+                    usrHeader = platform
+                    usrValue = msgContent;
+                    updateUser(usrId, usrHeader, usrValue, msg);
+                } else {
+                    msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
+                }
+                });
+            }
+        }
+
         // Profile
         if (msg.content.startsWith(prefix + 'profile')) {
             loadUsers();
             let msgContent = msg.content.split(" ")[1];
             if (msgContent == "add") {
                 msgContent = msg.content.split(" ")[2];
-                if (msgContent == "twitch") {
-                    msgContent = msg.content.split(" ")[3];
-                    if (msgContent == null) {
-                        msg.channel.send("Please specify a Twitch link. For example `" + prefix + "profile add twitch http://www.twitch.tv/itsrowdyrooster`");
-                    } else {
-                        let query = { "_id" : msg.author.id };
-                        colUsers.find(query).toArray(function(err, result) {
-                        if (result.length > 0) {
-                            usrId = msg.author.id;
-                            usrHeader = "twitch";
-                            usrValue = msgContent;
-                            updateUser(usrId, usrHeader, usrValue, msg);
-                        } else {
-                            msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
-                        }
-                        });
-                    }
-                } else if (msgContent == "twitter") {
-                    msgContent = msg.content.split(" ")[3];
-                    if (msgContent == null) {
-                        msg.channel.send("Please specify a Twitter link. For example `" + prefix + "profile add twitch http://www.twitter.com/itsrowdyrooster`");
-                    } else {
-                        let query = { "_id" : msg.author.id };
-                        colUsers.find(query).toArray(function(err, result) {
-                        if (result.length > 0) {
-                            usrId = msg.author.id;
-                            usrHeader = "twitter";
-                            usrValue = msgContent;
-                            updateUser(usrId, usrHeader, usrValue, msg);
-                        } else {
-                            msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
-                        }
-                        });
-                    }
-                } else if (msgContent == "facebook") {
-                    msgContent = msg.content.split(" ")[3];
-                    if (msgContent == null) {
-                        msg.channel.send("Please specify a Facebook link. For example `" + prefix + "profile add twitch http://www.facebook.com/itsrowdyrooster`");
-                    } else {
-                        let query = { "_id" : msg.author.id };
-                        colUsers.find(query).toArray(function(err, result) {
-                        if (result.length > 0) {
-                            usrId = msg.author.id;
-                            usrHeader = "facebook";
-                            usrValue = msgContent;
-                            updateUser(usrId, usrHeader, usrValue, msg);
-                        } else {
-                            msg.channel.send("User profile is not present in the database. Please run `" + prefix + "createprofile` to be added to the datebase.")
-                        }
-                        });
-                    }
+                if (msgContent == "twitch" || msgContent == "twitter" || msgContent == "facebook" || msgContent == "instagram") {
+                    platform = msgContent;
+                    addLink(msg, platform);
                 } else {
                     msg.channel.send("This is where we will add a new thing.");
                 }
-            } else if (msgContent == "del") {
+            } else if (msgContent == "del" || msgContent == "delete") {
                 msgContent = msg.content.split(" ")[2];
-                if (msgContent == "twitch" || msgContent == "twitter" || msgContent == "facebook") {
+                if (msgContent == "twitch" || msgContent == "twitter" || msgContent == "facebook" || msgContent == "instagram") {
                     let query = { "_id" : msg.author.id };
                     colUsers.find(query).toArray(function(err, result) {
                         if (result.length > 0) {
@@ -742,7 +714,7 @@ client.on('message', msg => {
                 } else {
                     msg.channel.send("Please enter the name of the entry you would like to delete. For example `" + prefix + "profile del twitch`");
                 }
-            } else{
+            } else {
                 user = msg.author.id;
                 whoIs(user);
             }
