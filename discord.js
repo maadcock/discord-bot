@@ -23,8 +23,8 @@ let prefix = '~'; // Set default prefix
 
 // Sleep Function
 function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
+    let start = new Date().getTime();
+    for (let i = 0; i < 1e7; i++) {
       if ((new Date().getTime() - start) > milliseconds){
         break;
       }
@@ -83,30 +83,30 @@ client.on('message', msg => {
 
         // Server Count
         function serverCount() {
-            msg.channel.send('I am currently present in ' + dbServers.length + ' servers.');
+            msg.channel.send(`I am currently present in ${dbServers.length} servers.`);
         }
 
-        if (msg.content.startsWith('<@' + botUID + '> How many servers are using you?') && msg.author.id == UIDAdmin) {
-            serverCount();
+        if (msg.content.startsWith(`<@${botUID} How many servers are using you?`) && msg.author.id == UIDAdmin) {
+                serverCount();
         }
 
-        if (msg.content.startsWith(prefix + 'servercount') && msg.author.id == UIDAdmin) {
+        if (msg.content.startsWith(`${prefix}servercount`) && msg.author.id == UIDAdmin) {
             serverCount();
         }
 
         // Shutdown
-        if (msg.content.startsWith(prefix + 'shutdown') && msg.author.id == UIDAdmin) {
+        if (msg.content.startsWith(`${prefix}shutdown`) && msg.author.id == UIDAdmin) {
             msg.channel.send('My battery is low and it’s getting dark. Goodbye.');
             client.destroy();
-        } else if (msg.content.startsWith(prefix + 'shutdown') && msg.author.id != UIDAdmin) {
+        } else if (msg.content.startsWith(`${prefix}shutdown`) && msg.author.id != UIDAdmin) {
             msg.channel.send('Access denied.');
         }
         
         // Now Playing
-        if (msg.content.startsWith(prefix + 'np') && msg.author.id == UIDAdmin) {
-            console.log(prefix + 'np run by ' + msg.author.username);
+        if (msg.content.startsWith(`${prefix}np`) && msg.author.id == UIDAdmin) {
+            console.log(`${prefix}np run by ${msg.author.username}`);
             if (msg.content.split(" ")[1] == undefined) {
-                msg.channel.send('ERROR: Please include an activity name. For example: `' + prefix + 'np A Good Movie`');
+                msg.channel.send(`ERROR: Please include an activity name. For example: \`${prefix}np A Good Movie\``);
             } else {
                 stringLen = msg.content.split(" ").length;
                 var newActivity = "";
