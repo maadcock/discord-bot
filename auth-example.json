@@ -1,0 +1,10 @@
+{
+   "token": "",
+   "twitch": "",
+   "twitchUser" : "",
+   "clientID": "",
+   "adminUID": "",
+   "botUID": "",
+   "mixerClient": "",
+   "mongoUrl" : ""
+}

@@ -1,3 +1,5 @@
+const functions = require('./functions.js')
+
 exports.create = function create(msg,colUsers) {
     let newUser = { _id: msg.author.id, displayName: msg.author.username };
 
@@ -30,5 +32,11 @@ exports.whoIs = function whoIs(msg,user,colUsers) {
         }
     });
 
+}
+
+exports.updateUser = function updateUser(usrId, usrHeader, usrValue, msg, colUsers) {
+    colUsers.update({ "_id" : usrId }, { "$set" : {[usrHeader] : usrValue}})
+    functions.sleepCommand(1000)
+    msg.channel.send("Profile updated.")
 }
 

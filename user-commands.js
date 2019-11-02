@@ -52,3 +52,38 @@ exports.mixer = function mixer(msg,mixerClientID,mixerClient) {
         msg.channel.send(`\`\`\`css\n${chName}\nFollowers: ${chFollowers}\nChannel Views: ${chViewers}\nBroadcaster Status: ${chStatus}\`\`\``)
     })
 }
+
+exports.catFacts = function catFacts(msg,XMLHttpRequest) {
+    function httpGet(){
+        let url = 'https://cat-fact.herokuapp.com/facts'
+        let xmlHttp = new XMLHttpRequest()
+        xmlHttp.open( "GET", url, false)
+        xmlHttp.send(null)
+        return xmlHttp.responseText
+    }
+    let catFacts = JSON.parse(httpGet())
+    let catFactCount = catFacts.all.length
+    let msgContent = msg.content.split(" ")[1]
+
+    if (msgContent == undefined) {
+        let factNumber = Math.floor(Math.random() * catFactCount)
+        let catFactObject = catFacts.all[factNumber]
+        let fact = catFactObject.text
+        let authorFirstName = catFactObject.user.name.first
+        let authorLastName = catFactObject.user.name.last
+        msg.channel.send(`Cat Fact #${factNumber}: ${fact} - ${authorFirstName} ${authorLastName}`)
+    } else {
+        msgContent = parseInt(msgContent, 10)
+        if (msgContent > 0) {
+            let factNumber = msgContent
+            let catFactObject = catFacts.all[factNumber]
+            let fact = catFactObject.text
+            let authorFirstName = catFactObject.user.name.first
+            let authorLastName = catFactObject.user.name.last
+            msg.channel.send(`Cat Fact #${factNumber}: ${fact} - ${authorFirstName} ${authorLastName}`)
+        } else {
+            msg.channel.send(`Use a number between 1 and ${catFactCount}. For example \`${prefix}catfacts 100\``)
+        }
+    }
+
+}

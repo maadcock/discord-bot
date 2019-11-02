@@ -1,3 +1,6 @@
+const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest
+const auth = require('./auth.json')
+
 // Pull Server List from db
 exports.loadServers = function loadServers(colServers) {
     colServers.find().toArray(function(err, result) {
@@ -15,7 +18,6 @@ exports.loadUsers = function loadUsers(colUsers) {
         }
     })
 }
-
 
 exports.logCommand = function logCommand(msg) {
     console.log(`${msg.content.split(" ")[0]} run by ${msg.author.username}`)
@@ -35,4 +37,14 @@ exports.updateServer = function updateServer(svrId,svrHeader,svrValue,msg,colSer
     msg.channel.send("Server entry updated.")
     exports.sleepCommand(500)
     exports.loadServers(colServers)
+}
+
+exports.getTwitchHttp = function httpGet(url){
+    let xmlHttp = new XMLHttpRequest()
+    xmlHttp.open( "GET", url, false )
+    xmlHttp.setRequestHeader("Client-ID",auth.clientID)
+    xmlHttp.setRequestHeader("Accept",auth.v5Accept)
+    xmlHttp.setRequestHeader("Authorization",auth.twitchOAuth)
+    xmlHttp.send(null)
+    return xmlHttp.responseText
 }

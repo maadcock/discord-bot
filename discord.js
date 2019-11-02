@@ -130,46 +130,10 @@ client.on('message', msg => {
             commands.mixer(msg,mixerClientID,mixerClient)
         }
         
-        // Cat Facts Function
-        function catFacts() {
-            functions.logCommand(msg)
-            let msgContent = msg.content.split(" ")[1]
-
-            function httpGet(){
-                let url = 'https://cat-fact.herokuapp.com/facts'
-                let xmlHttp = new XMLHttpRequest()
-                xmlHttp.open( "GET", url, false)
-                xmlHttp.send(null)
-                return xmlHttp.responseText
-            }
-            let catFacts = JSON.parse(httpGet())
-            let catFactCount = catFacts.all.length
-
-            if (msgContent == undefined) {
-                let factNumber = Math.floor(Math.random() * catFactCount)
-                let catFactObject = catFacts.all[factNumber]
-                let fact = catFactObject.text
-                let authorFirstName = catFactObject.user.name.first
-                let authorLastName = catFactObject.user.name.last
-                msg.channel.send(`Cat Fact #${factNumber}: ${fact} - ${authorFirstName} ${authorLastName}`)
-            } else {
-                msgContent = parseInt(msgContent, 10)
-                if (msgContent > 0) {
-                    let factNumber = msgContent
-                    let catFactObject = catFacts.all[factNumber]
-                    let fact = catFactObject.text
-                    let authorFirstName = catFactObject.user.name.first
-                    let authorLastName = catFactObject.user.name.last
-                    msg.channel.send(`Cat Fact #${factNumber}: ${fact} - ${authorFirstName} ${authorLastName}`)
-                } else {
-                    msg.channel.send(`Use a number between 1 and ${catFactCount}. For example \`${prefix}catfacts 100\``)
-                }
-            }
-        }
-        
-        // Call Cat Facts
+        // Cat Facts
         if (msg.content.startsWith(`${prefix}catfact`)) {
-            catFacts()
+            functions.logCommand(msg)
+            commands.catFacts(msg,XMLHttpRequest)
         }
         
         // Live Status
@@ -245,7 +209,7 @@ client.on('message', msg => {
                     xmlHttp.send(null)
                     return xmlHttp.responseText
                 }
-                
+
                 if (JSON.parse(getChannelID())._total === 0) {
                     msg.channel.send('User not found.')
                 } else {
@@ -265,17 +229,17 @@ client.on('message', msg => {
                     console.log(`Obtaining ${channelInfo.name}'s stats. ID: ${CID}`)
                     
                     if (channelTeamInfo.teams[0] === undefined) {
-                        let channelTeam = "None"
+                        channelTeam = "None"
                     } else {
-                        let channelTeam = (JSON.parse(getChannelTeam()).teams[0].display_name)
+                        channelTeam = (JSON.parse(getChannelTeam()).teams[0].display_name)
                     }
 
                     if (channelInfo.partner === true) {
-                        let broadcastStatus = "Partner"
+                        broadcastStatus = "Partner"
                     } else if (channelInfo.broadcaster_type === "affiliate") {
-                        let broadcastStatus = "Affiliate"
+                        broadcastStatus = "Affiliate"
                     } else {
-                        let broadcastStatus = "Broadcaster"
+                        broadcastStatus = "Broadcaster"
                     }
 
                     msg.channel.send(`\`\`\`\n${channelInfo.name}\nFollowers: ${channelInfo.followers}\nChannel Views: ${channelInfo.views}\nBroadcaster Status: ${broadcastStatus}\nChannel Team: ${channelTeam}\nURL: http://twitch.tv/${msgContent}\`\`\``)
@@ -317,13 +281,6 @@ client.on('message', msg => {
             pCommands.whoIs(msg,user,colUsers)
         }
 
-        // Add User Attribute
-        function updateUser(usrId, usrHeader, usrValue, msg) {
-            colUsers.update({ "_id" : usrId }, { "$set" : {[usrHeader] : usrValue}})
-            functions.sleep(1000)
-            msg.channel.send("Profile updated.")
-        }
-
         // Del User Attribute
         function delUserAtt(usrId, usrHeader, usrValue, msg) {
             colUsers.update({ "_id" : usrId }, { "$unset" : {[usrHeader] : usrValue}})
@@ -354,7 +311,7 @@ client.on('message', msg => {
                     usrId = msg.author.id
                     usrHeader = platform
                     usrValue = msgContent
-                    updateUser(usrId, usrHeader, usrValue, msg)
+                    pCommands.updateUser(usrId, usrHeader, usrValue, msg, colUsers)
                 } else {
                     msg.channel.send(`User profile is not present in the database. Please run \`${prefix}createprofile\` to be added to the datebase.`)
                 }
@@ -365,7 +322,7 @@ client.on('message', msg => {
         // Profile
         if (msg.content.startsWith(`${prefix}profile`)) {
             functions.logCommand(msg)
-            loadUsers()
+            functions.loadUsers(colUsers)
             let msgContent = msg.content.split(" ")[1]
             if (msgContent == "add") {
                 msgContent = msg.content.split(" ")[2]
