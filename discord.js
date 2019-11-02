@@ -21,6 +21,11 @@ const mongoUrl = auth.mongoUrl;
 
 let prefix = '~'; // Set default prefix
 
+// Command Log Function
+function logCommand(msg) {
+    console.log(`${msg.content.split(" ")[0]} run by ${msg.author.username}`)
+}
+
 // Sleep Function
 function sleep(milliseconds) {
     let start = new Date().getTime();
@@ -104,7 +109,7 @@ client.on('message', msg => {
         
         // Now Playing
         if (msg.content.startsWith(`${prefix}np`) && msg.author.id == UIDAdmin) {
-            console.log(`${prefix}np run by ${msg.author.username}`);
+            logCommand(msg)
             if (msg.content.split(" ")[1] == undefined) {
                 msg.channel.send(`ERROR: Please include an activity name. For example: \`${prefix}np A Good Movie\``);
             } else {
@@ -115,25 +120,13 @@ client.on('message', msg => {
                 }
                 client.user.setActivity(newActivity, { type: 'PLAYING' });
             }
-        } else if (msg.content.startsWith(prefix + 'np') && msg.author.id != UIDAdmin) {
+        } else if (msg.content.startsWith(`${prefix}np`) && msg.author.id != UIDAdmin) {
             msg.channel.send('Access denied.');
         }
 
-        // DB Testing
-        if (msg.content.startsWith(prefix + 'db')) {
-            colServers.find().toArray((err, items) => {
-                let prefixList = "";
-                for (var i = 0; i < items.length; i++) {
-                    prefixList = prefixList + items[i].prefix + " ";
-                }
-                prefixList = "The following prefixes are currently present in the database: `" + prefixList + "`";
-                msg.channel.send(prefixList);
-            });
-        }
-
-        // Bulk Delete
-        if (msg.content.startsWith(prefix + 'clean') && msg.member.hasPermission("ADMINISTRATOR")) {
-            console.log(prefix + 'clean run by ' + msg.author.username);
+        // Bulk Message Delete
+        if (msg.content.startsWith(`${prefix}clean`) && msg.member.hasPermission("ADMINISTRATOR")) {
+            logCommand(msg)
             msgContent = msg.content.split(" ")[1];
             if (msgContent == "all") {
                 msg.channel.send("Attempting to delete all messages.");
@@ -166,15 +159,16 @@ client.on('message', msg => {
         }
 
         // Timeout
-        if (msg.content.startsWith(prefix + 'timeout') && msg.member.hasPermission("ADMINISTRATOR")) {
-            if (msg.content.startsWith(prefix + 'timeoutlist')) {
+        if (msg.content.startsWith(`${prefix}timeout`) && msg.member.hasPermission("ADMINISTRATOR")) {
+            if (msg.content.startsWith(`${prefix}timeoutlist`)) {
+                logCommand(msg)
                 var query = {"server" : msg.guild.id}
                 colTimeout.find(query).toArray(function(err, result) {
                     if (result.length > 0) {
                         let newMsg = "**Current Users in Timeout:**\n";
                         for (var i = 0; i < result.length; i++) {
                             user = result[i]._id;
-                            newMsg += "<@" + user + ">\n";
+                            newMsg += `<@${user}>\n`;
                         }
                         msg.channel.send(newMsg);
                     } else {
@@ -182,14 +176,15 @@ client.on('message', msg => {
                     }
                 });
             } else {
-                console.log(prefix + 'timeout run by ' + msg.author.username);
+                console.log(`${prefix}timeout run by ${msg.author.username}`);
                 var query = {_id : msg.guild.id}
-                if (msg.content.startsWith(prefix + 'timeout setrole')) {
+                if (msg.content.startsWith(`${prefix}timeout setrole`)) {
+                    logCommand(msg)
                     colServers.find(query).toArray(function(err, result) {
                         if (result.length > 0) {
                             msgContent = msg.content.split(" ")[2];
                             if (msgContent == undefined) {
-                                msg.channel.send("Please specify a role. Example: `" + prefix + "timeout setrole <role>`");
+                                msg.channel.send(`Please specify a role. Example: \`${prefix}timeout setrole <role>\``);
                             } else {
                                 svrId = msg.guild.id;
                                 svrHeader = "timeoutRole";
@@ -212,12 +207,12 @@ client.on('message', msg => {
                         if (result.length > 0) {
                             timeoutRole = result[0].timeoutRole;
                             if (timeoutRole == undefined) {
-                                msg.channel.send("Timeout role not set! Please set the timeout role by using the command `" + prefix + "timeout setrole <role>`");
+                                msg.channel.send(`Timeout role not set! Please set the timeout role by using the command \`${prefix}timeout setrole <role>\``);
                             } else {
                                 timeoutRole = result[0].timeoutRole.substring(3,21);
                                 msgContent = msg.content.split(" ")[1];
                                 if (msgContent == undefined) {
-                                    msg.channel.send("ERR: Please specify a user. For example: `" + prefix + "timeout <user>`");
+                                    msg.channel.send(`ERR: Please specify a user. For example: \`${prefix}timeout <user>\``);
                                 } else {
                                     let user = msg.guild.members.get(msgContent.substring(2,20));
                                     let userRoles = user.roles.map(role => role.id);
@@ -238,24 +233,24 @@ client.on('message', msg => {
                                                 user.removeRole(userRoles[i]);
                                             };
                                             user.addRole(timeoutRole);
-                                            msg.channel.send("Sending " + msgContent + " to timeout.");
+                                            msg.channel.send(`Sending ${msgContent} to timeout.`);
                                         }
                                     });
                                 }
                             }
                         } else {
-                            msg.channel.send("Timeout role not set! Please set the timeout role by using the command `" + prefix + "timeout setrole <role>`");
+                            msg.channel.send(`Timeout role not set! Please set the timeout role by using the command \`${prefix}timeout setrole <role>\``);
                         }
                     });
                 }
             }
-        } else if (msg.content.startsWith(prefix + 'timeout') && msg.member.hasPermission("ADMINISTRATOR")) {
+        } else if (msg.content.startsWith(`${prefix}timeout`) && msg.member.hasPermission("ADMINISTRATOR")) {
             msg.channel.send('Access denied.');
         }
 
         // Set Prefix - Per Server
-        if (msg.content.startsWith(prefix + 'prefix') && msg.member.hasPermission("ADMINISTRATOR")) {
-            console.log(prefix + 'prefix run by ' + msg.author.username);
+        if (msg.content.startsWith(`${prefix}prefix`) && msg.member.hasPermission("ADMINISTRATOR")) {
+            logCommand(msg)
             newPrefix = msg.content.split(" ")[1];
             if (newPrefix == "`") {
                 msg.channel.send("Invalid prefix selection. Please use another prefix.");
@@ -296,7 +291,7 @@ client.on('message', msg => {
 
         // List Subscribers
         if (msg.content === (prefix + 'sublist') && msg.author.id == UIDAdmin) {
-            console.log(prefix + 'sublist run by ' + msg.author.username)
+            logCommand(msg)
 
             function getChannelID(){ 
                 let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
@@ -341,7 +336,7 @@ client.on('message', msg => {
 
         // Subscriber Count
         if (msg.content === (prefix + 'subcount') && msg.author.id == UIDAdmin) {
-            console.log(prefix + 'subcount run by ' + msg.author.username)
+            logCommand(msg)
 
             function getChannelID(){ 
                 let url = "https://api.twitch.tv/kraken/users?login=" + twitchUser;
@@ -377,6 +372,7 @@ client.on('message', msg => {
 
         // Mixer Stats
         if (msg.content.startsWith(prefix + 'mixerstats')) {
+            logCommand(msg)
             let msgContent = msg.content.split(" ")[1];
             const channelName = msgContent;
 
@@ -399,6 +395,7 @@ client.on('message', msg => {
         
         // Cat Facts Function
         function catFacts() {
+            logCommand(msg)
             let msgContent = msg.content.split(" ")[1];
 
             function httpGet(){
@@ -412,7 +409,6 @@ client.on('message', msg => {
             let catFactCount = catFacts.all.length;
 
             if (msgContent == undefined) {
-                console.log(prefix + 'catfacts run by ' + msg.author.username);
                 let factNumber = Math.floor(Math.random() * catFactCount);
                 let catFactObject = catFacts.all[factNumber];
                 let fact = catFactObject.text;
@@ -420,7 +416,6 @@ client.on('message', msg => {
                 let authorLastName = catFactObject.user.name.last;
                 msg.channel.send('Cat Fact #' + factNumber + ': "' + fact + '" - ' + authorFirstName + ' ' + authorLastName);
             } else {
-                console.log(prefix + 'catfacts ' + msgContent + ' run by ' + msg.author.username);
                 msgContent = parseInt(msgContent, 10);
                 if (msgContent > 0) {
                     let factNumber = msgContent;
@@ -443,7 +438,7 @@ client.on('message', msg => {
         // Live Status
         if (msg.content.startsWith(prefix + 'live')) {
             let msgContent = msg.content.split(" ")[1];
-            console.log(prefix + 'live ' + msgContent + ' run by ' + msg.author.username);
+            logCommand(msg)
 
             if (msgContent == undefined) {
                 msg.channel.send('ERROR: Please include a channel name. For example: `' + prefix + 'live itsrowdyrooster`');
@@ -554,12 +549,14 @@ client.on('message', msg => {
 
         // Twitch Stats
         if (msg.content.startsWith(prefix + 'stats')) {
+            logCommand(msg)
             let msgContent = msg.content.split(" ")[1];
             twitchStats(msgContent);
         } 
 
         // Help 
         if (msg.content.startsWith('<@' + botUID + '> help') || msg.content.startsWith(prefix + 'help')) {
+            logCommand(msg)
             let newMsg = "";
             if (msg.content.startsWith('<@' + botUID + '>')) { // Allows the user to ping the bot directly, in which case the bot will return the current prefix for command use
                 newMsg = 'The prefix is currently set to `' + prefix + '`\n\n';
@@ -597,6 +594,7 @@ client.on('message', msg => {
         // Create Profile
         if (msg.content.startsWith(prefix + 'createprofile')) {
             loadUsers();
+            logCommand(msg)
             let newUser = { _id: msg.author.id, displayName: msg.author.username };
 
             let query = { _id: msg.author.id };
@@ -616,6 +614,7 @@ client.on('message', msg => {
         }
 
         function whoIs(user) {
+            logCommand(msg)
             colUsers.find(user).toArray(function(err, result) {
                 if (result.length > 0) {
                     newMsg = "```";
@@ -636,12 +635,14 @@ client.on('message', msg => {
 
         // Who Is
         if (msg.content.startsWith(prefix + 'whois')) {
+            logCommand(msg)
             let user = msg.content.split(" ")[1].substring(3,21);
             whoIs(user);
         }
         
         // Who Am I?
         if (msg.content.startsWith(prefix + 'whoami')) {
+            logCommand(msg)
             let user = { _id: msg.author.id };
             whoIs(user);
         }
@@ -662,6 +663,7 @@ client.on('message', msg => {
 
         // Delete Profile
         if (msg.content.startsWith(prefix + "deleteprofile")) {
+            logCommand(msg)
             loadUsers();
             let delUser = { _id: msg.author.id };
             colUsers.remove(delUser, function(err, res) {
@@ -692,6 +694,7 @@ client.on('message', msg => {
 
         // Profile
         if (msg.content.startsWith(prefix + 'profile')) {
+            logCommand(msg)
             loadUsers();
             let msgContent = msg.content.split(" ")[1];
             if (msgContent == "add") {
@@ -728,6 +731,7 @@ client.on('message', msg => {
 
         // Admin Check
         if (msg.content.startsWith(prefix + 'admin')) {
+            logCommand(msg)
             if (msg.member.hasPermission("ADMINISTRATOR")) {
                 msg.channel.send("This user has Administrator permissions.");
             } else {
