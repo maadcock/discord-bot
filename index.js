@@ -9,7 +9,7 @@ const MongoClient = require('mongodb').MongoClient
 
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 3030
 
 const functions = require('./functions.js')
 const commands = require('./user-commands.js')
