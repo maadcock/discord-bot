@@ -31,3 +31,24 @@ exports.help = function help(prefix,msg,botUID) {
     newMsg += `${prefix}timeoutlist - Lists currently timed out users\n\`\`\``;
     msg.channel.send(newMsg);
 }
+
+exports.mixer = function mixer(msg,mixerClientID,mixerClient) {
+    let msgContent = msg.content.split(" ")[1]
+    const channelName = msgContent
+
+    mixerClient.use(new Mixer.OAuthProvider(client, {
+        clientId: mixerClientID,
+    }))
+
+    mixerClient.request('GET', `channels/${channelName}`)
+    .then(res => {
+        const channel = res.body
+        const chName = channel.user.username
+        const chViewers = channel.viewersTotal
+        const chFollowers = channel.numFollowers
+        res.body.partnered === true ? chStatus = 'Partner' : chStatus = 'Broadcaster'
+        // console.log(res.body)
+
+        msg.channel.send(`\`\`\`css\n${chName}\nFollowers: ${chFollowers}\nChannel Views: ${chViewers}\nBroadcaster Status: ${chStatus}\`\`\``)
+    })
+}

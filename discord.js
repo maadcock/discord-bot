@@ -6,13 +6,16 @@ const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest
 const v5Accept = "application/vnd.twitchtv.v5+json"
 const mixerClient = new Mixer.Client(new Mixer.DefaultRequestRunner())
 const MongoClient = require('mongodb').MongoClient
+
 const express = require('express')
 const app = express()
 const port = 3000
+
 const functions = require('./functions.js')
 const commands = require('./user-commands.js')
 const pCommands = require('./profile-commands.js')
 const aCommands = require('./admin-commands.js')
+const oCommands = require('./owner-commands.js')
 
 // Auth
 const auth = require('./auth.json')
@@ -55,7 +58,7 @@ client.on('message', msg => {
             }
         }
 
-        // Admin Commands
+        // Server Admin Commands
 
         // Server Count
         if (msg.content.startsWith(`${prefix}servercount`) || msg.content.startsWith(`<@${botUID} How many servers are using you?`) && msg.author.id == UIDAdmin) {
@@ -103,46 +106,11 @@ client.on('message', msg => {
             msg.channel.send('Access denied.')
         }
 
-        // List Subscribers
+        // Bot List Subscribers
         if (msg.content === (`${prefix}sublist`) && msg.author.id == UIDAdmin) {
             functions.logCommand(msg)
-
-            function getChannelID(){ 
-                let url = `https://api.twitch.tv/kraken/users?login=${twitchUser}`
-                return httpGet(url,clientID,v5Accept) 
-            }
-            
-            function httpGet(url,clientID,v5Accept){
-                let xmlHttp = new XMLHttpRequest()
-                xmlHttp.open( "GET", url, false )
-                xmlHttp.setRequestHeader("Client-ID",clientID)
-                xmlHttp.setRequestHeader("Accept",v5Accept)
-                xmlHttp.setRequestHeader("Authorization",twitchOAuth)
-                xmlHttp.send(null)
-                return xmlHttp.responseText
-            }
-            
-            let CID = JSON.parse(getChannelID()).users[0]._id
-            
-            function getChannelSubs(){ 
-                let url = `https://api.twitch.tv/kraken/channels/${CID}/subscriptions`
-                return httpGet(url,clientID,v5Accept) 
-            }
-            
-            let subs = JSON.parse(getChannelSubs())        
-            let subCount = subs._total - 1
-
-            message = `You currently have ${subCount} subscribers on Twitch.\n`
-
-            for (let i = 1; i <= subCount; i++) {
-                if (subs.subscriptions[i].is_gift == false) {
-                    isGift = 'Paid/Prime'
-                } else {
-                    isGift = 'Gift'
-                }
-                message = message + (`**${subs.subscriptions[i].user.name}** - Tier ${(subs.subscriptions[i].sub_plan / 1000)} - ${isGift}\n`)
-            }
-            msg.channel.send(message)
+            let ifCount = true
+            oCommands.fetchSubs(msg,twitchUser,clientID,v5Accept,v5Accept,twitchOAuth,XMLHttpRequest,ifCount)
         } else if (msg.content.startsWith(`${prefix}sublist`) && msg.author.id != UIDAdmin) {
             msg.channel.send('Access denied.')
         }
@@ -150,33 +118,8 @@ client.on('message', msg => {
         // Subscriber Count
         if (msg.content === (`${prefix}subcount`) && msg.author.id == UIDAdmin) {
             functions.logCommand(msg)
-
-            function getChannelID(){ 
-                let url = `https://api.twitch.tv/kraken/users?login=${twitchUser}`
-                return httpGet(url,clientID,v5Accept) 
-            }
-            
-            function httpGet(url,clientID,v5Accept){
-                let xmlHttp = new XMLHttpRequest()
-                xmlHttp.open( "GET", url, false )
-                xmlHttp.setRequestHeader("Client-ID",clientID)
-                xmlHttp.setRequestHeader("Accept",v5Accept)
-                xmlHttp.setRequestHeader("Authorization",twitchOAuth)
-                xmlHttp.send(null)
-                return xmlHttp.responseText
-            }
-            
-            let CID = JSON.parse(getChannelID()).users[0]._id
-            
-            function getChannelSubs(){ 
-                let url = `https://api.twitch.tv/kraken/channels/${CID}/subscriptions`
-                return httpGet(url,clientID,v5Accept) 
-            }
-            
-            let subs = JSON.parse(getChannelSubs())        
-            let subCount = subs._total - 1
-
-            msg.channel.send(`${twitchUser} currently has ${subCount} subscribers on Twitch.`)
+            let ifCount = false
+            oCommands.fetchSubs(msg,twitchUser,clientID,v5Accept,v5Accept,twitchOAuth,XMLHttpRequest,ifCount)
         } else if (msg.content.startsWith(`${prefix}subcount`) && msg.author.id != UIDAdmin) {
             msg.channel.send('Access denied.')
         }
@@ -184,24 +127,7 @@ client.on('message', msg => {
         // Mixer Stats
         if (msg.content.startsWith(`${prefix}mixerstats`)) {
             functions.logCommand(msg)
-            let msgContent = msg.content.split(" ")[1]
-            const channelName = msgContent
-
-            mixerClient.use(new Mixer.OAuthProvider(client, {
-                clientId: mixerClientID,
-            }))
-        
-            mixerClient.request('GET', `channels/${channelName}`)
-            .then(res => {
-                const channel = res.body
-                const chName = channel.user.username
-                const chViewers = channel.viewersTotal
-                const chFollowers = channel.numFollowers
-                res.body.partnered === true ? chStatus = 'Partner' : chStatus = 'Broadcaster'
-                // console.log(res.body)
-
-                msg.channel.send(`\`\`\`css\n${chName}\nFollowers: ${chFollowers}\nChannel Views: ${chViewers}\nBroadcaster Status: ${chStatus}\`\`\``)
-            })
+            commands.mixer(msg,mixerClientID,mixerClient)
         }
         
         // Cat Facts Function
